@@ -369,6 +369,28 @@
   .ob-complete-row span:first-child { color: var(--muted); }
   .ob-complete-row span:last-child  { font-weight: 700; color: var(--green); }
 
+  /* ── PLAN SELECTION STEP ── */
+  .ob-field-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin: 12px 0 5px; }
+  .ob-field-input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; font-size: 14px; font-family: inherit; outline: none;
+    background: var(--white); color: var(--text); transition: 0.15s;
+  }
+  .ob-field-input:focus { border-color: var(--purple); }
+  .phone.rtl .ob-field-input { text-align: right; direction: rtl; }
+  .ob-plan-card {
+    border: 2px solid var(--border); border-radius: 14px; padding: 14px 16px;
+    margin-bottom: 10px; cursor: pointer; transition: 0.15s; background: var(--white);
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .ob-plan-card.selected { border-color: var(--purple); background: var(--purple-light); }
+  .ob-plan-card-info {}
+  .ob-plan-card-name { font-size: 14px; font-weight: 800; color: var(--text); }
+  .ob-plan-card-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .ob-plan-card-price { font-size: 18px; font-weight: 800; color: var(--purple); white-space: nowrap; }
+  .ob-plan-card.selected .ob-plan-card-price { color: var(--purple-dark); }
+  .ob-section-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin: 16px 0 8px; }
+
   /* Demo reset button (outside phone) */
   .demo-reset {
     text-align: center; margin-top: 12px;
@@ -765,28 +787,50 @@
       <div class="ob-progress-bar"><div class="ob-progress-fill" id="ob-progress" style="width:25%"></div></div>
       <div class="ob-step-label" id="ob-step-label">Step 1 of 3</div>
 
-      <!-- ── STEP 1: WELCOME ── -->
+      <!-- ── STEP 1: CHOOSE PLAN + PERSONAL INFO ── -->
       <div class="ob-step active" id="ob-step-1">
-        <div class="ob-welcome">
-          <div class="ob-welcome-logo">🧘</div>
-          <h1 id="ob-welcome-title">Welcome, Shira!</h1>
-          <p id="ob-welcome-desc">Before you book your first class, we need just a few minutes to complete your registration. This only happens once.</p>
-          <div class="ob-steps-list">
-            <div class="ob-steps-row">
-              <div class="ob-steps-icon">💊</div>
-              <div><div class="ob-steps-text" id="ob-list-health">Health Declaration</div><div class="ob-steps-sub" id="ob-list-health-sub">Medical background & conditions</div></div>
-              <div class="ob-steps-check">○</div>
+        <div class="ob-doc-header">
+          <h2 id="ob-plan-title">🧘 Welcome to My Studio</h2>
+          <p id="ob-plan-sub">Choose a membership to get started</p>
+        </div>
+        <div class="ob-doc-body">
+          <!-- Personal info -->
+          <div class="ob-field-label" id="ob-name-lbl">Full Name *</div>
+          <input class="ob-field-input" id="ob-name" type="text" placeholder="Your full name" autocomplete="name"/>
+          <div class="ob-field-label" id="ob-email-lbl">Email *</div>
+          <input class="ob-field-input" id="ob-email" type="email" placeholder="your@email.com" autocomplete="email"/>
+          <div class="ob-field-label" id="ob-phone-lbl">Phone</div>
+          <input class="ob-field-input" id="ob-phone" type="tel" placeholder="05X-XXXXXXX" autocomplete="tel" style="direction:ltr"/>
+          <!-- Plan selection -->
+          <div class="ob-section-label" id="ob-plan-lbl">Choose a Plan *</div>
+          <div id="ob-plans-container">
+            <!-- Loaded from Supabase; fallback static cards below -->
+            <div class="ob-plan-card" onclick="selectPlan(this,'static-1')" data-plan-id="static-1">
+              <div class="ob-plan-card-info">
+                <div class="ob-plan-card-name" id="plan-name-s1">Monthly Unlimited</div>
+                <div class="ob-plan-card-desc" id="plan-desc-s1">All classes included</div>
+              </div>
+              <div class="ob-plan-card-price" id="plan-price-s1">₪390</div>
             </div>
-            <div class="ob-steps-row">
-              <div class="ob-steps-icon">📋</div>
-              <div><div class="ob-steps-text" id="ob-list-waiver">Liability Waiver</div><div class="ob-steps-sub" id="ob-list-waiver-sub">Studio terms & release of liability</div></div>
-              <div class="ob-steps-check">○</div>
+            <div class="ob-plan-card" onclick="selectPlan(this,'static-2')" data-plan-id="static-2">
+              <div class="ob-plan-card-info">
+                <div class="ob-plan-card-name" id="plan-name-s2">10-Class Pack</div>
+                <div class="ob-plan-card-desc" id="plan-desc-s2">10 entries, valid 3 months</div>
+              </div>
+              <div class="ob-plan-card-price" id="plan-price-s2">₪350</div>
+            </div>
+            <div class="ob-plan-card" onclick="selectPlan(this,'static-3')" data-plan-id="static-3">
+              <div class="ob-plan-card-info">
+                <div class="ob-plan-card-name" id="plan-name-s3">Drop-In</div>
+                <div class="ob-plan-card-desc" id="plan-desc-s3">Single class</div>
+              </div>
+              <div class="ob-plan-card-price" id="plan-price-s3">₪60</div>
             </div>
           </div>
         </div>
         <div class="ob-footer">
-          <div class="ob-error"></div>
-          <button class="ob-btn" id="ob-welcome-btn" onclick="goToObStep(2)">Get Started →</button>
+          <div class="ob-error" id="ob-plan-error"></div>
+          <button class="ob-btn" id="ob-plan-btn" onclick="submitPlanStep()">Continue →</button>
         </div>
       </div>
 
@@ -923,7 +967,7 @@
 // ══════════════════════════════════════════════
 const translations = {
   en: {
-    greeting:'Good morning 👋', hi_name:'Hi, Shira!', ready:'Ready for your next class?',
+    greeting:'Good morning 👋', hi_name:'Welcome! 👋', ready:'Ready for your next class?',
     your_membership:'Your Membership', plan_monthly:'Monthly Unlimited',
     plan_detail:'🧘 All classes included', expires_date:'Expires March 31, 2026',
     days_left:'8 days left', renew_title:'Your membership expires in 8 days',
@@ -1000,7 +1044,7 @@ const translations = {
     sched_full:' · Full ✗',
   },
   he: {
-    greeting:'בוקר טוב 👋', hi_name:'!שלום, שירה', ready:'?מוכנ/ה לשיעור הבא',
+    greeting:'בוקר טוב 👋', hi_name:'!ברוכ/ה הבא/ה', ready:'?מוכנ/ה לשיעור הבא',
     your_membership:'המנוי שלך', plan_monthly:'חודשי ללא הגבלה',
     plan_detail:'🧘 כל השיעורים כלולים', expires_date:'פג תוקף 31 במרץ 2026',
     days_left:'8 ימים נותרו', renew_title:'המנוי שלך פג תוקף בעוד 8 ימים',
@@ -1253,8 +1297,21 @@ function switchBookingTab(btn, tab) {
 const OB_TRANSLATIONS = {
   en: {
     step_of: (n,t) => `Step ${n} of ${t}`,
-    welcome_title: 'Welcome, Shira!',
-    welcome_desc:  'Before you book your first class, we need just a few minutes to complete your registration. This only happens once.',
+    welcome_title: 'Welcome to My Studio!',
+    welcome_desc:  'Choose a membership plan and complete a quick registration. This only takes a few minutes and happens once.',
+    ob_plan_title: '🧘 Welcome to My Studio',
+    ob_plan_sub: 'Choose a membership to get started',
+    ob_name_lbl: 'Full Name *',
+    ob_email_lbl: 'Email *',
+    ob_phone_lbl: 'Phone',
+    ob_plan_lbl: 'Choose a Plan *',
+    ob_plan_btn: 'Continue →',
+    ob_plan_err_name: 'Please enter your full name.',
+    ob_plan_err_email: 'Please enter a valid email.',
+    ob_plan_err_plan: 'Please choose a membership plan.',
+    ob_name_placeholder: 'Your full name',
+    ob_email_placeholder: 'your@email.com',
+    ob_phone_placeholder: '05X-XXXXXXX',
     ob_list_health: 'Health Declaration',
     ob_list_health_sub: 'Medical background & conditions',
     ob_list_waiver: 'Liability Waiver',
@@ -1297,8 +1354,21 @@ const OB_TRANSLATIONS = {
   },
   he: {
     step_of: (n,t) => `שלב ${n} מתוך ${t}`,
-    welcome_title: '!ברוכ/ה הבא/ה, שירה',
-    welcome_desc:  'לפני שתזמין/י שיעור ראשון, נצטרך כמה דקות להשלמת ההרשמה. זה קורה רק פעם אחת.',
+    welcome_title: '!ברוכ/ה הבא/ה לסטודיו',
+    welcome_desc:  'בחר/י מנוי והשלם/י הרשמה קצרה. לוקח כמה דקות בלבד, רק פעם אחת.',
+    ob_plan_title: '🧘 ברוכ/ה הבא/ה לסטודיו',
+    ob_plan_sub: 'בחר/י מנוי להתחלת ההרשמה',
+    ob_name_lbl: 'שם מלא *',
+    ob_email_lbl: 'אימייל *',
+    ob_phone_lbl: 'טלפון',
+    ob_plan_lbl: 'בחר/י מנוי *',
+    ob_plan_btn: 'המשך ←',
+    ob_plan_err_name: 'אנא הזן/י את שמך המלא.',
+    ob_plan_err_email: 'אנא הזן/י אימייל תקין.',
+    ob_plan_err_plan: 'אנא בחר/י מנוי.',
+    ob_name_placeholder: 'שמך המלא',
+    ob_email_placeholder: 'your@email.com',
+    ob_phone_placeholder: '05X-XXXXXXX',
     ob_list_health: 'הצהרת בריאות',
     ob_list_health_sub: 'רקע רפואי ומצב בריאותי',
     ob_list_waiver: 'כתב ויתור',
@@ -1341,6 +1411,35 @@ const OB_TRANSLATIONS = {
   }
 };
 
+// ── PLAN SELECTION ──────────────────────────────────
+let selectedPlanId = null;
+let selectedPlanName = '';
+
+function selectPlan(card, planId) {
+  document.querySelectorAll('.ob-plan-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedPlanId = planId;
+  selectedPlanName = card.querySelector('.ob-plan-card-name')?.textContent || planId;
+}
+
+function submitPlanStep() {
+  const t = OB_TRANSLATIONS[currentLang];
+  const name  = document.getElementById('ob-name').value.trim();
+  const email = document.getElementById('ob-email').value.trim();
+  const errEl = document.getElementById('ob-plan-error');
+  if (!name)  { errEl.textContent = t.ob_plan_err_name;  return; }
+  if (!email || !email.includes('@')) { errEl.textContent = t.ob_plan_err_email; return; }
+  if (!selectedPlanId) { errEl.textContent = t.ob_plan_err_plan; return; }
+  errEl.textContent = '';
+  // Save to pending state
+  window._obClientName  = name;
+  window._obClientEmail = email;
+  window._obClientPhone = document.getElementById('ob-phone').value.trim();
+  window._obPlanId      = selectedPlanId;
+  window._obPlanName    = selectedPlanName;
+  goToObStep(2);
+}
+
 // Track which checkboxes are ticked
 const checks = { hc1:false, hc2:false, hc3:false, wc1:false, wc2:false, wc3:false };
 
@@ -1356,13 +1455,22 @@ function checkSig(inputId, btnId) { /* validation happens on submit */ }
 function applyObLang(lang) {
   const t = OB_TRANSLATIONS[lang];
   document.getElementById('ob-step-label').textContent = t.step_of(currentObStep, 3);
-  document.getElementById('ob-welcome-title').textContent   = t.welcome_title;
-  document.getElementById('ob-welcome-desc').textContent    = t.welcome_desc;
+  // Plan step
+  document.getElementById('ob-plan-title').textContent  = t.ob_plan_title;
+  document.getElementById('ob-plan-sub').textContent    = t.ob_plan_sub;
+  document.getElementById('ob-name-lbl').textContent    = t.ob_name_lbl;
+  document.getElementById('ob-email-lbl').textContent   = t.ob_email_lbl;
+  document.getElementById('ob-phone-lbl').textContent   = t.ob_phone_lbl;
+  document.getElementById('ob-plan-lbl').textContent    = t.ob_plan_lbl;
+  document.getElementById('ob-plan-btn').textContent    = t.ob_plan_btn;
+  document.getElementById('ob-name').placeholder  = t.ob_name_placeholder;
+  document.getElementById('ob-email').placeholder = t.ob_email_placeholder;
+  document.getElementById('ob-phone').placeholder = t.ob_phone_placeholder;
+  // Welcome (kept for reference)
   document.getElementById('ob-list-health').textContent     = t.ob_list_health;
   document.getElementById('ob-list-health-sub').textContent = t.ob_list_health_sub;
   document.getElementById('ob-list-waiver').textContent     = t.ob_list_waiver;
   document.getElementById('ob-list-waiver-sub').textContent = t.ob_list_waiver_sub;
-  document.getElementById('ob-welcome-btn').textContent     = t.welcome_btn;
   document.getElementById('ob-health-title').textContent    = t.health_title;
   document.getElementById('ob-health-sub').textContent      = t.health_sub;
   document.getElementById('ob-placeholder-badge').textContent  = t.placeholder_badge;
@@ -1446,11 +1554,41 @@ function submitWaiver() {
 }
 
 function enterApp() {
+  // Persist onboarding completion in localStorage
+  const clientData = {
+    name:       window._obClientName  || '',
+    email:      window._obClientEmail || '',
+    phone:      window._obClientPhone || '',
+    plan_id:    window._obPlanId      || '',
+    plan_name:  window._obPlanName    || '',
+    onboarding_done: true
+  };
+  try { localStorage.setItem('studio_client', JSON.stringify(clientData)); } catch(e) {}
+
+  // Personalize the greeting if name is known
+  if (clientData.name) {
+    const firstName = clientData.name.split(' ')[0];
+    document.querySelectorAll('[data-i18n="hi_name"]').forEach(el => {
+      el.textContent = currentLang === 'he' ? `!שלום, ${firstName}` : `Hi, ${firstName}! 👋`;
+    });
+  }
+
   document.getElementById('onboarding').classList.add('hidden');
   showToast(currentLang === 'he' ? '!ברוכ/ה הבא/ה לסטודיו 🧘' : '🧘 Welcome to the studio!');
+
+  // Trigger Supabase client creation (defined in the data layer block)
+  if (window.createClientInDB) window.createClientInDB(clientData);
 }
 
 function resetOnboarding() {
+  // Clear localStorage so we start fresh
+  try { localStorage.removeItem('studio_client'); } catch(e) {}
+  selectedPlanId = null; selectedPlanName = '';
+  // Reset plan cards
+  document.querySelectorAll('.ob-plan-card').forEach(c => c.classList.remove('selected'));
+  // Clear form fields
+  ['ob-name','ob-email','ob-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('ob-plan-error').textContent = '';
   // Reset checkboxes
   ['hc1','hc2','hc3','wc1','wc2','wc3'].forEach(id => {
     checks[id] = false;
@@ -1462,6 +1600,10 @@ function resetOnboarding() {
   ['hc-error','wc-error'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=''; });
   // Reset step markers
   document.querySelectorAll('.ob-steps-check').forEach(el => el.textContent = '○');
+  // Reset greeting
+  document.querySelectorAll('[data-i18n="hi_name"]').forEach(el => {
+    el.textContent = currentLang === 'he' ? '!ברוכ/ה הבא/ה' : 'Welcome! 👋';
+  });
   // Show onboarding
   document.getElementById('onboarding').classList.remove('hidden');
   goToObStep(1);
@@ -1493,6 +1635,26 @@ renderSchedule(currentDayIdx);
   document.getElementById('btn-he').classList.add('active');
   applyLang('he');
   applyObLang('he');
+
+  // Check localStorage — if returning visitor, skip onboarding
+  try {
+    const saved = localStorage.getItem('studio_client');
+    if (saved) {
+      const c = JSON.parse(saved);
+      if (c && c.onboarding_done) {
+        document.getElementById('onboarding').classList.add('hidden');
+        // Personalize greeting
+        if (c.name) {
+          const firstName = c.name.split(' ')[0];
+          document.querySelectorAll('[data-i18n="hi_name"]').forEach(el => {
+            el.textContent = `!שלום, ${firstName}`;
+          });
+        }
+        // Expose saved client data for Supabase layer
+        window._savedClient = c;
+      }
+    }
+  } catch(e) {}
 })();
 </script>
 
@@ -1623,8 +1785,120 @@ renderSchedule(currentDayIdx);
     if (memData) await sb.from('client_memberships').update({ sessions_used: (memData.sessions_used||0)+1 }).eq('id', memData.id);
   };
 
+  // ── Load membership plans into plan selection step ──
+  async function loadPlansDB() {
+    const { data, error } = await sb
+      .from('membership_plans')
+      .select('id, name, price, sessions_limit, description')
+      .eq('active', true)
+      .order('price');
+    if (error || !data || !data.length) return; // keep static fallback
+
+    const container = document.getElementById('ob-plans-container');
+    container.innerHTML = data.map(plan => {
+      const sessLabel = plan.sessions_limit == null ? '' : ` · ${plan.sessions_limit} entries`;
+      const desc = plan.description || sessLabel;
+      return `
+        <div class="ob-plan-card" onclick="selectPlan(this,'${plan.id}')" data-plan-id="${plan.id}">
+          <div class="ob-plan-card-info">
+            <div class="ob-plan-card-name">${plan.name}</div>
+            <div class="ob-plan-card-desc">${desc}</div>
+          </div>
+          <div class="ob-plan-card-price">₪${plan.price}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Create a new client in Supabase after onboarding ──
+  window.createClientInDB = async function(clientData) {
+    // Check if client already exists (by email)
+    const { data: existing } = await sb.from('clients').select('id').eq('email', clientData.email).maybeSingle();
+    let clientId = existing?.id;
+
+    if (!clientId) {
+      // Insert new client
+      const { data: newClient } = await sb.from('clients')
+        .insert({
+          name: clientData.name,
+          email: clientData.email,
+          phone: clientData.phone || null,
+          experience_level: 'beginner',
+          onboarding_completed: true,
+          health_declaration_signed: true,
+          waiver_signed: true,
+        })
+        .select('id').single();
+      clientId = newClient?.id;
+    } else {
+      // Mark onboarding done on existing record
+      await sb.from('clients').update({
+        onboarding_completed: true,
+        health_declaration_signed: true,
+        waiver_signed: true,
+      }).eq('id', clientId);
+    }
+
+    if (!clientId) return;
+
+    // Save client ID to localStorage
+    try {
+      const saved = JSON.parse(localStorage.getItem('studio_client') || '{}');
+      saved.id = clientId;
+      localStorage.setItem('studio_client', JSON.stringify(saved));
+    } catch(e) {}
+
+    // Create a membership if a real plan was selected (UUID format)
+    const planId = clientData.plan_id;
+    if (planId && planId.length > 10 && !planId.startsWith('static')) {
+      const { data: plan } = await sb.from('membership_plans').select('duration_days').eq('id', planId).single();
+      if (plan) {
+        const startDate = new Date().toISOString().slice(0,10);
+        const endDate = new Date(Date.now() + plan.duration_days * 86400000).toISOString().slice(0,10);
+        await sb.from('client_memberships').insert({
+          client_id: clientId,
+          plan_id: planId,
+          start_date: startDate,
+          end_date: endDate,
+          status: 'active',
+        });
+      }
+    }
+
+    // Reload membership info for the now-registered user
+    window._savedClient = { ...clientData, id: clientId };
+    await loadMembershipForClient(clientId);
+  };
+
+  // ── Load client membership by client ID ──────
+  async function loadMembershipForClient(clientId) {
+    const { data } = await sb
+      .from('client_memberships')
+      .select('*, membership_plans(name, sessions_limit)')
+      .eq('client_id', clientId)
+      .eq('status', 'active')
+      .single();
+    if (!data) return;
+    const planName = data.membership_plans?.name || '';
+    const sessLeft = data.membership_plans?.sessions_limit == null
+      ? '∞' : String(data.membership_plans.sessions_limit - (data.sessions_used || 0));
+    document.querySelectorAll('[data-i18n="plan_monthly"]').forEach(el => el.textContent = planName);
+    // Update sessions stat card
+    const sessionStat = document.querySelector('#screen-home .stat-mini:nth-child(2) .stat-mini-val');
+    if (sessionStat) sessionStat.textContent = sessLeft;
+  }
+
   // ── Init ─────────────────────────────────────
-  await Promise.all([loadScheduleDB(), loadMembershipDB()]);
+  // If returning client (identified by localStorage), load their membership
+  const pending = [loadScheduleDB(), loadPlansDB()];
+  if (window._savedClient?.id) pending.push(loadMembershipForClient(window._savedClient.id));
+  else if (window._savedClient?.email) {
+    // Look up by email
+    const { data: c } = await sb.from('clients').select('id').eq('email', window._savedClient.email).maybeSingle();
+    if (c?.id) pending.push(loadMembershipForClient(c.id));
+  } else {
+    pending.push(loadMembershipDB()); // fallback to demo client
+  }
+  await Promise.all(pending);
 })();
 </script>
 </body>
