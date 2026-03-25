@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Studio App</title>
+<style>
+  :root {
+    --purple: #6B46C1;
+    --purple-dark: #553C9A;
+    --purple-light: #EDE9F8;
+    --purple-mid: #9F7AEA;
+    --accent: #F6AD55;
+    --green: #38A169;
+    --red: #E53E3E;
+    --blue: #3182CE;
+    --sidebar-w: 230px;
+    --bg: #F7F5FF;
+    --white: #FFFFFF;
+    --text: #1A1A2E;
+    --text-muted: #718096;
+    --border: #E2D9F3;
+    --card-shadow: 0 2px 12px rgba(107,70,193,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--purple-dark); color: #fff;
+    display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 18px; border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .sidebar-logo .logo-icon { font-size: 28px; }
+  .sidebar-logo .logo-text { font-size: 18px; font-weight: 700; margin-top: 4px; }
+  .sidebar-logo .logo-sub { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .nav-section { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.45; padding: 16px 20px 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+    cursor: pointer; border-radius: 0; transition: background 0.15s; font-size: 14px;
+    color: rgba(255,255,255,0.8); position: relative;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.18); color: #fff; font-weight: 600; }
+  .nav-item.active::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--accent); border-radius:0 2px 2px 0; }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge { margin-left: auto; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 7px; }
+  .sidebar-bottom { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 13px; color: rgba(255,255,255,0.65); }
+  .sidebar-bottom strong { color: #fff; display: block; font-size: 14px; margin-bottom: 2px; }
+
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 0 28px; height: 58px; display: flex; align-items: center;
+    justify-content: space-between; flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); }
+  .topbar-title span { color: var(--purple); }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .topbar-btn {
+    display: flex; align-items: center; gap: 6px; background: var(--purple);
+    color: #fff; border: none; border-radius: 8px; padding: 7px 14px;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s;
+  }
+  .topbar-btn:hover { background: var(--purple-dark); }
+  .topbar-btn.secondary { background: var(--purple-light); color: var(--purple); }
+  .topbar-btn.secondary:hover { background: var(--border); }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--purple-light); color: var(--purple); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .content { flex: 1; overflow-y: auto; padding: 28px; }
+
+  /* ── CARDS ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--white); border-radius: 12px; padding: 18px 20px;
+    box-shadow: var(--card-shadow); border: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--text); }
+  .stat-sub { font-size: 12px; color: var(--green); font-weight: 600; margin-top: 4px; }
+  .stat-icon { font-size: 26px; opacity: 0.7; }
+  .card {
+    background: var(--white); border-radius: 12px; padding: 20px 22px;
+    box-shadow: var(--card-shadow); border: 1px solid var(--border); margin-bottom: 20px;
+  }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--text); }
+  .card-link { font-size: 13px; color: var(--purple); cursor: pointer; font-weight: 500; }
+  .card-link:hover { text-decoration: underline; }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; padding: 9px 12px; color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid var(--border); background: var(--purple-light); }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #FAF8FF; }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .badge-green { background: #C6F6D5; color: #276749; }
+  .badge-red { background: #FED7D7; color: #9B2C2C; }
+  .badge-orange { background: #FEEBC8; color: #9C4221; }
+  .badge-blue { background: #BEE3F8; color: #2C5282; }
+  .badge-purple { background: var(--purple-light); color: var(--purple); }
+  .badge-grey { background: #EDF2F7; color: #4A5568; }
+
+  /* ── AVATAR CELL ── */
+  .client-cell { display: flex; align-items: center; gap: 10px; }
+  .client-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #fff; flex-shrink: 0; }
+  .client-name { font-weight: 600; color: var(--text); font-size: 13.5px; }
+  .client-email { font-size: 11.5px; color: var(--text-muted); }
+
+  /* ── GRID LAYOUTS ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .main-side { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+
+  /* ── CLASS ITEMS ── */
+  .class-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .class-item:last-child { border-bottom: none; }
+  .class-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
+  .class-info { flex: 1; }
+  .class-name { font-weight: 600; font-size: 14px; }
+  .class-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .class-spots { text-align: right; }
+  .class-spots-num { font-size: 13px; font-weight: 700; color: var(--purple); }
+  .class-spots-label { font-size: 11px; color: var(--text-muted); }
+
+  /* ── SCHEDULE / CALENDAR ── */
+  .week-nav { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .week-nav button { background: var(--purple-light); border: none; border-radius: 8px; padding: 7px 14px; cursor: pointer; color: var(--purple); font-weight: 600; font-size: 14px; }
+  .week-nav button:hover { background: var(--purple); color: #fff; }
+  .week-nav .week-label { font-size: 16px; font-weight: 700; color: var(--text); }
+  .schedule-grid { display: grid; grid-template-columns: 80px repeat(7, 1fr); gap: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--white); box-shadow: var(--card-shadow); }
+  .sg-header { background: var(--purple-light); padding: 10px 6px; text-align: center; font-size: 12px; font-weight: 700; color: var(--purple); border-bottom: 1px solid var(--border); }
+  .sg-header.today { background: var(--purple); color: #fff; }
+  .sg-time { background: #FAFAFA; padding: 8px 10px; font-size: 11px; color: var(--text-muted); font-weight: 500; text-align: right; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .sg-cell { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 3px; min-height: 40px; position: relative; }
+  .sg-cell:last-child { border-right: none; }
+  .class-block {
+    background: var(--purple-light); border-left: 3px solid var(--purple);
+    border-radius: 4px; padding: 4px 7px; font-size: 11px; cursor: pointer;
+    transition: transform 0.1s; margin-bottom: 2px;
+  }
+  .class-block:hover { transform: scale(1.02); }
+  .class-block.green { background: #C6F6D5; border-left-color: var(--green); }
+  .class-block.orange { background: #FEEBC8; border-left-color: #DD6B20; }
+  .class-block-name { font-weight: 700; color: var(--text); }
+  .class-block-sub { color: var(--text-muted); margin-top: 1px; }
+
+  /* ── FORM / MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    z-index: 1000; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white); border-radius: 16px; padding: 28px 30px;
+    width: 520px; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+  .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
+  .modal h3 { font-size: 15px; font-weight: 700; margin: 16px 0 6px; color: var(--purple); }
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: inherit; color: var(--text); outline: none; transition: border 0.15s;
+  }
+  .form-row input:focus, .form-row select:focus { border-color: var(--purple); }
+  .form-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+  .btn { padding: 9px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: 0.15s; }
+  .btn-primary { background: var(--purple); color: #fff; }
+  .btn-primary:hover { background: var(--purple-dark); }
+  .btn-ghost { background: var(--purple-light); color: var(--purple); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn-danger { background: #FED7D7; color: var(--red); }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+
+  /* ── CLIENT PROFILE ── */
+  .profile-header { display: flex; align-items: center; gap: 18px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .profile-avatar { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: #fff; }
+  .profile-name { font-size: 20px; font-weight: 800; }
+  .profile-meta { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .profile-badges { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+  .tab { padding: 9px 18px; font-size: 13.5px; font-weight: 600; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.15s; }
+  .tab:hover { color: var(--purple); }
+  .tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .info-field { padding: 12px 14px; background: var(--bg); border-radius: 8px; }
+  .info-field-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .info-field-value { font-size: 14px; font-weight: 600; color: var(--text); }
+  .progress-bar { background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 4px; background: var(--purple); }
+
+  /* ── MEMBERSHIP PLANS ── */
+  .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .plan-card {
+    border: 2px solid var(--border); border-radius: 12px; padding: 20px;
+    text-align: center; cursor: pointer; transition: 0.2s; position: relative;
+  }
+  .plan-card:hover { border-color: var(--purple); box-shadow: 0 4px 20px rgba(107,70,193,0.15); }
+  .plan-card.popular { border-color: var(--purple); }
+  .plan-popular { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--purple); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 12px; border-radius: 20px; white-space: nowrap; }
+  .plan-name { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .plan-price { font-size: 28px; font-weight: 800; color: var(--purple); }
+  .plan-price span { font-size: 14px; font-weight: 500; color: var(--text-muted); }
+  .plan-desc { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+  .plan-count { font-size: 11px; font-weight: 600; color: var(--green); margin-top: 6px; }
+
+  /* ── ALERTS ── */
+  .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .alert-orange { background: #FEEBC8; color: #7B341E; border-left: 3px solid #DD6B20; }
+  .alert-green { background: #C6F6D5; color: #22543D; border-left: 3px solid var(--green); }
+  .alert-purple { background: var(--purple-light); color: var(--purple-dark); border-left: 3px solid var(--purple); }
+
+  /* ── SEARCH ── */
+  .search-bar { display: flex; gap: 10px; margin-bottom: 18px; }
+  .search-input { flex:1; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; }
+  .search-input:focus { border-color: var(--purple); }
+  .filter-btn { padding: 9px 16px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--white); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-muted); }
+  .filter-btn.active { border-color: var(--purple); color: var(--purple); background: var(--purple-light); }
+
+  /* ── NOTIFICATION ── */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px; background: var(--text); color: #fff;
+    padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500;
+    z-index: 2000; animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  @keyframes toastIn { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
+  /* ── MISC ── */
+  .page { display: none; }
+  .page.active { display: block; }
+  .section-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .section-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; }
+  .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .icon-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 6px; border-radius: 6px; transition: background 0.15s; }
+  .icon-btn:hover { background: var(--purple-light); }
+  .dot-menu { position: relative; display: inline-block; }
+  .scrollable-table { max-height: 420px; overflow-y: auto; }
+  .activity-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .activity-text { font-size: 13.5px; flex:1; }
+  .activity-time { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .whatsapp-btn { background: #25D366; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .whatsapp-btn:hover { background: #1EB556; }
+  .payment-amount { font-weight: 700; font-size: 14px; }
+  .payment-amount.positive { color: var(--green); }
+  .payment-amount.negative { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🧘</div>
+    <div class="logo-text">My Studio</div>
+    <div class="logo-sub">Management App</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="navigate('dashboard',this)">
+      <span class="nav-icon">🏠</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="navigate('schedule',this)">
+      <span class="nav-icon">📅</span> Schedule
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-section">People</div>
+    <div class="nav-item" onclick="navigate('clients',this)">
+      <span class="nav-icon">👥</span> Clients
+    </div>
+    <div class="nav-item" onclick="navigate('memberships',this)">
+      <span class="nav-icon">💳</span> Memberships
+    </div>
+    <div class="nav-section">Finance</div>
+    <div class="nav-item" onclick="navigate('payments',this)">
+      <span class="nav-icon">💰</span> Payments
+    </div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" onclick="navigate('messages',this)">
+      <span class="nav-icon">💬</span> Messages
+      <span class="nav-badge">5</span>
+    </div>
+    <div class="nav-item" onclick="navigate('analytics',this)">
+      <span class="nav-icon">📊</span> Analytics
+    </div>
+    <div class="nav-item" onclick="navigate('settings',this)">
+      <span class="nav-icon">⚙️</span> Settings
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <strong>Aviv</strong>
+    Studio Owner
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">🏠 <span>Dashboard</span></div>
+    <div class="topbar-right">
+      <button class="topbar-btn secondary" onclick="showToast('🔔 No new notifications')">🔔</button>
+      <button class="topbar-btn" id="topbar-action" onclick="topbarAction()">+ Add Class</button>
+      <div class="avatar" title="Aviv">A</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PAGE: DASHBOARD -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="section-title">Good morning, Aviv 👋</div>
+      <div class="section-sub">Here's what's happening at your studio today · Monday, March 23, 2026</div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Active Members</div>
+            <div class="stat-value">47</div>
+            <div class="stat-sub">↑ +3 this month</div>
+          </div>
+          <div class="stat-icon">👥</div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Classes This Week</div>
+            <div class="stat-value">12</div>
+            <div class="stat-sub">↑ 89% attendance</div>
+          </div>
+          <div class="stat-icon">📅</div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Revenue This Month</div>
+            <div class="stat-value">₪8,240</div>
+            <div class="stat-sub">↑ +12% vs last month</div>
+          </div>
+          <div class="stat-icon">💰</div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Expiring Soon</div>
+            <div class="stat-value">5</div>
+            <div class="stat-sub" style="color:#DD6B20">⚠ Renew needed</div>
+          </div>
+          <div class="stat-icon">⏰</div>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div class="alert alert-orange">⚠️ <strong>5 memberships</strong> expire in the next 7 days. <span class="card-link" onclick="navigate('memberships', document.querySelector('[onclick*=memberships]'))">View all →</span></div>
+      <div class="alert alert-purple">💬 <strong>3 new WhatsApp replies</strong> from clients waiting for response.</div>
+      <div class="alert alert-green">✅ <strong>Morning Yoga Flow</strong> (09:00) is fully booked — 15/15 spots taken!</div>
+
+      <div class="main-side">
+        <!-- Today's Classes -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 Today's Classes</div>
+            <div class="card-link" onclick="navigate('schedule', document.querySelector('[onclick*=schedule]'))">View full schedule →</div>
+          </div>
+          <div class="class-item">
+            <div class="class-dot" style="background:var(--purple)"></div>
+            <div class="class-info">
+              <div class="class-name">Morning Yoga Flow</div>
+              <div class="class-meta">09:00 – 10:00 · Instructor: Maya</div>
+            </div>
+            <div class="class-spots">
+              <div class="class-spots-num">15/15</div>
+              <div class="class-spots-label"><span class="badge badge-orange">Full</span></div>
+            </div>
+          </div>
+          <div class="class-item">
+            <div class="class-dot" style="background:var(--green)"></div>
+            <div class="class-info">
+              <div class="class-name">Pilates Core</div>
+              <div class="class-meta">11:00 – 12:00 · Instructor: Dana</div>
+            </div>
+            <div class="class-spots">
+              <div class="class-spots-num">8/10</div>
+              <div class="class-spots-label"><span class="badge badge-green">Open</span></div>
+            </div>
+          </div>
+          <div class="class-item">
+            <div class="class-dot" style="background:#3182CE"></div>
+            <div class="class-info">
+              <div class="class-name">Vinyasa Flow</div>
+              <div class="class-meta">18:00 – 19:15 · Instructor: Maya</div>
+            </div>
+            <div class="class-spots">
+              <div class="class-spots-num">5/12</div>
+              <div class="class-spots-label"><span class="badge badge-green">Open</span></div>
+            </div>
+          </div>
+          <div class="class-item">
+            <div class="class-dot" style="background:#D69E2E"></div>
+            <div class="class-info">
+              <div class="class-name">Yin Yoga</div>
+              <div class="class-meta">19:30 – 20:30 · Instructor: Noa</div>
+            </div>
+            <div class="class-spots">
+              <div class="class-spots-num">10/12</div>
+              <div class="class-spots-label"><span class="badge badge-green">Open</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div>
+          <!-- Recent Activity -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header">
+              <div class="card-title">🔔 Recent Activity</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--green)"></div>
+              <div class="activity-text">
+                <strong>Shira Cohen</strong> booked Pilates Core
+                <div class="activity-time">2 minutes ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--purple)"></div>
+              <div class="activity-text">
+                <strong>Ron Levi</strong> renewed Monthly Unlimited
+                <div class="activity-time">34 minutes ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:#DD6B20"></div>
+              <div class="activity-text">
+                <strong>Tamar Ben-David</strong> cancelled Yin Yoga
+                <div class="activity-time">1 hour ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--blue)"></div>
+              <div class="activity-text">
+                <strong>New member</strong> Yael Shapira joined
+                <div class="activity-time">3 hours ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--green)"></div>
+              <div class="activity-text">
+                <strong>Payment ₪290</strong> received from Avi Katz
+                <div class="activity-time">Yesterday</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚡ Quick Actions</div></div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <button class="btn btn-primary" style="width:100%; text-align:left" onclick="openModal('modal-add-class')">📅 Add New Class</button>
+              <button class="btn btn-ghost" style="width:100%; text-align:left" onclick="openModal('modal-add-client')">👤 Add New Client</button>
+              <button class="btn btn-ghost" style="width:100%; text-align:left" onclick="showToast('📲 Opening WhatsApp broadcast...')">💬 Send WhatsApp Blast</button>
+              <button class="btn btn-ghost" style="width:100%; text-align:left" onclick="navigate('payments', document.querySelector('[onclick*=payments]'))">💰 Record Payment</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PAGE: SCHEDULE -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="page" id="page-schedule">
+      <div class="section-title">Class Schedule</div>
+      <div class="section-sub">Manage and view all classes for the week</div>
+
+      <div class="week-nav">
+        <button onclick="showToast('◀ Previous week')">◀</button>
+        <span class="week-label">March 23 – 29, 2026</span>
+        <button onclick="showToast('▶ Next week')">▶</button>
+        <button class="topbar-btn" style="margin-left:auto" onclick="openModal('modal-add-class')">+ Add Class</button>
+      </div>
+
+      <div class="schedule-grid">
+        <!-- Headers -->
+        <div class="sg-header"></div>
+        <div class="sg-header today">Mon<br/>23</div>
+        <div class="sg-header">Tue<br/>24</div>
+        <div class="sg-header">Wed<br/>25</div>
+        <div class="sg-header">Thu<br/>26</div>
+        <div class="sg-header">Fri<br/>27</div>
+        <div class="sg-header">Sat<br/>28</div>
+        <div class="sg-header">Sun<br/>29</div>
+
+        <!-- 07:00 -->
+        <div class="sg-time">07:00</div>
+        <div class="sg-cell"></div><div class="sg-cell"></div><div class="sg-cell"></div>
+        <div class="sg-cell"><div class="class-block green" onclick="openClassModal('Morning Pilates','07:00 – 08:00','Dana','10/10','Thursday')"><div class="class-block-name">Pilates</div><div class="class-block-sub">Dana · Full</div></div></div>
+        <div class="sg-cell"></div><div class="sg-cell"></div><div class="sg-cell"></div>
+
+        <!-- 09:00 -->
+        <div class="sg-time">09:00</div>
+        <div class="sg-cell"><div class="class-block" onclick="openClassModal('Morning Yoga Flow','09:00 – 10:00','Maya','15/15','Monday')"><div class="class-block-name">Yoga Flow</div><div class="class-block-sub">Maya · 15/15 🔥</div></div></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"><div class="class-block" onclick="openClassModal('Yoga Basics','09:00 – 10:00','Noa','6/12','Wednesday')"><div class="class-block-name">Yoga Basics</div><div class="class-block-sub">Noa · 6/12</div></div></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"><div class="class-block green" onclick="openClassModal('Friday Yoga','09:00 – 10:15','Maya','12/12','Friday')"><div class="class-block-name">Yoga</div><div class="class-block-sub">Maya · Full</div></div></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"><div class="class-block orange" onclick="openClassModal('Weekend Flow','09:00 – 10:30','Dana','3/10','Sunday')"><div class="class-block-name">Weekend Flow</div><div class="class-block-sub">Dana · 3/10</div></div></div>
+
+        <!-- 11:00 -->
+        <div class="sg-time">11:00</div>
+        <div class="sg-cell"><div class="class-block orange" onclick="openClassModal('Pilates Core','11:00 – 12:00','Dana','8/10','Monday')"><div class="class-block-name">Pilates Core</div><div class="class-block-sub">Dana · 8/10</div></div></div>
+        <div class="sg-cell"><div class="class-block" onclick="openClassModal('Power Yoga','11:00 – 12:15','Maya','7/12','Tuesday')"><div class="class-block-name">Power Yoga</div><div class="class-block-sub">Maya · 7/12</div></div></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"><div class="class-block" onclick="openClassModal('Pilates Adv','11:00 – 12:00','Dana','5/8','Thursday')"><div class="class-block-name">Pilates Adv</div><div class="class-block-sub">Dana · 5/8</div></div></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"><div class="class-block orange" onclick="openClassModal('Pilates Sat','11:00 – 12:00','Dana','9/10','Saturday')"><div class="class-block-name">Pilates</div><div class="class-block-sub">Dana · 9/10</div></div></div>
+        <div class="sg-cell"></div>
+
+        <!-- 18:00 -->
+        <div class="sg-time">18:00</div>
+        <div class="sg-cell"><div class="class-block" onclick="openClassModal('Vinyasa Flow','18:00 – 19:15','Maya','5/12','Monday')"><div class="class-block-name">Vinyasa Flow</div><div class="class-block-sub">Maya · 5/12</div></div></div>
+        <div class="sg-cell"><div class="class-block green" onclick="openClassModal('Evening Pilates','18:00 – 19:00','Dana','10/10','Tuesday')"><div class="class-block-name">Pilates Eve</div><div class="class-block-sub">Dana · Full</div></div></div>
+        <div class="sg-cell"><div class="class-block" onclick="openClassModal('Vinyasa','18:00 – 19:15','Maya','8/12','Wednesday')"><div class="class-block-name">Vinyasa</div><div class="class-block-sub">Maya · 8/12</div></div></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"></div>
+
+        <!-- 19:30 -->
+        <div class="sg-time">19:30</div>
+        <div class="sg-cell"><div class="class-block" onclick="openClassModal('Yin Yoga','19:30 – 20:30','Noa','10/12','Monday')"><div class="class-block-name">Yin Yoga</div><div class="class-block-sub">Noa · 10/12</div></div></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"><div class="class-block" onclick="openClassModal('Yin Yoga','19:30 – 20:30','Noa','7/12','Wednesday')"><div class="class-block-name">Yin Yoga</div><div class="class-block-sub">Noa · 7/12</div></div></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"><div class="class-block" onclick="openClassModal('Yin Yoga Fri','19:30 – 20:30','Noa','4/12','Friday')"><div class="class-block-name">Yin Yoga</div><div class="class-block-sub">Noa · 4/12</div></div></div>
+        <div class="sg-cell"></div>
+        <div class="sg-cell"></div>
+      </div>
+
+      <div style="display:flex; gap:16px; margin-top:14px; font-size:12px; color:var(--text-muted)">
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:var(--purple-light);border-left:3px solid var(--purple);display:inline-block"></span>Open</span>
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#C6F6D5;border-left:3px solid var(--green);display:inline-block"></span>Full</span>
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#FEEBC8;border-left:3px solid #DD6B20;display:inline-block"></span>Almost Full</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PAGE: CLIENTS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="page" id="page-clients">
+      <div class="section-title">Client Management</div>
+      <div class="section-sub">47 active members · 5 inactive</div>
+
+      <div class="search-bar">
+        <input class="search-input" placeholder="🔍  Search by name, email or phone..." oninput="filterClients(this.value)"/>
+        <button class="filter-btn active" onclick="toggleFilter(this,'All')">All</button>
+        <button class="filter-btn" onclick="toggleFilter(this,'Active')">Active</button>
+        <button class="filter-btn" onclick="toggleFilter(this,'Expiring')">Expiring</button>
+        <button class="filter-btn" onclick="toggleFilter(this,'Inactive')">Inactive</button>
+        <button class="topbar-btn" onclick="openModal('modal-add-client')">+ New Client</button>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table id="clients-table">
+            <thead><tr>
+              <th>Client</th><th>Phone</th><th>Plan</th><th>Sessions Left</th><th>Status</th><th>Last Class</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="clients-tbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PAGE: MEMBERSHIPS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="page" id="page-memberships">
+      <div class="section-title">Memberships & Plans</div>
+      <div class="section-sub">Define plans and manage all active subscriptions</div>
+
+      <div class="plan-grid">
+        <div class="plan-card" onclick="showToast('📋 10-Class Pack details')">
+          <div class="plan-name">10-Class Pack</div>
+          <div class="plan-price">₪290 <span>/ pack</span></div>
+          <div class="plan-desc">10 classes, valid 3 months. Any class type.</div>
+          <div class="plan-count">🟢 18 active members</div>
+        </div>
+        <div class="plan-card popular" onclick="showToast('⭐ Monthly Unlimited details')">
+          <div class="plan-popular">⭐ Most Popular</div>
+          <div class="plan-name">Monthly Unlimited</div>
+          <div class="plan-price">₪390 <span>/ month</span></div>
+          <div class="plan-desc">Unlimited classes, auto-renews monthly.</div>
+          <div class="plan-count">🟢 22 active members</div>
+        </div>
+        <div class="plan-card" onclick="showToast('🎯 Drop-In details')">
+          <div class="plan-name">Drop-In Class</div>
+          <div class="plan-price">₪45 <span>/ class</span></div>
+          <div class="plan-desc">Pay per class. No commitment.</div>
+          <div class="plan-count">🟡 7 this month</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Active Memberships</div>
+          <button class="topbar-btn" onclick="openModal('modal-add-membership')">+ Assign Plan</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Client</th><th>Plan</th><th>Started</th><th>Expires</th><th>Sessions Left</th><th>Auto-Renew</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="client-cell"><div class="client-avatar" style="background:#6B46C1">S</div><div><div class="client-name">Shira Cohen</div></div></div></td>
+                <td><span class="badge badge-purple">Monthly Unlimited</span></td>
+                <td>Mar 1</td><td style="color:var(--red);font-weight:600">Mar 31</td>
+                <td>∞</td>
+                <td><span class="badge badge-green">✓ On</span></td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td><button class="whatsapp-btn" onclick="showToast('📲 WhatsApp reminder sent to Shira!')">📲 Remind</button></td>
+              </tr>
+              <tr>
+                <td><div class="client-cell"><div class="client-avatar" style="background:#2C7A7B">R</div><div><div class="client-name">Ron Levi</div></div></div></td>
+                <td><span class="badge badge-blue">10-Class Pack</span></td>
+                <td>Feb 15</td><td>May 15</td>
+                <td style="color:var(--green);font-weight:700">7</td>
+                <td><span class="badge badge-grey">Off</span></td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td><button class="whatsapp-btn" onclick="showToast('📲 WhatsApp sent to Ron!')">📲 Remind</button></td>
+              </tr>
+              <tr>
+                <td><div class="client-cell"><div class="client-avatar" style="background:#C05621">T</div><div><div class="client-name">Tamar Ben-David</div></div></div></td>
+                <td><span class="badge badge-purple">Monthly Unlimited</span></td>
+                <td>Feb 23</td><td style="color:var(--red);font-weight:600">Mar 26 ⚠</td>
+                <td>∞</td>
+                <td><span class="badge badge-grey">Off</span></td>
+                <td><span class="badge badge-orange">Expiring</span></td>
+                <td><button class="whatsapp-btn" onclick="showToast('📲 Renewal reminder sent to Tamar!')">📲 Remind</button></td>
+              </tr>
+              <tr>
+                <td><div class="client-cell"><div class="client-avatar" style="background:#276749">Y</div><div><div class="client-name">Yael Shapira</div></div></div></td>
+                <td><span class="badge badge-blue">10-Class Pack</span></td>
+                <td>Mar 20</td><td>Jun 20</td>
+                <td style="color:var(--orange);font-weight:700">2</td>
+                <td><span class="badge badge-grey">Off</span></td>
+                <td><span class="badge badge-orange">Low Sessions</span></td>
+                <td><button class="whatsapp-btn" onclick="showToast('📲 Low sessions alert sent to Yael!')">📲 Remind</button></td>
+              </tr>
+              <tr>
+                <td><div class="client-cell"><div class="client-avatar" style="background:#2C5282">A</div><div><div class="client-name">Avi Katz</div></div></div></td>
+                <td><span class="badge badge-purple">Monthly Unlimited</span></td>
+                <td>Mar 1</td><td>Mar 31</td>
+                <td>∞</td>
+                <td><span class="badge badge-green">✓ On</span></td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td><button class="whatsapp-btn" onclick="showToast('📲 WhatsApp sent to Avi!')">📲 Remind</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PAGE: PAYMENTS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="page" id="page-payments">
+      <div class="section-title">Payments</div>
+      <div class="section-sub">Track all transactions and record manual payments</div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div><div class="stat-label">This Month</div><div class="stat-value">₪8,240</div><div class="stat-sub">↑ +12% vs last</div></div>
+          <div class="stat-icon">📈</div>
+        </div>
+        <div class="stat-card">
+          <div><div class="stat-label">Pending</div><div class="stat-value">₪1,150</div><div class="stat-sub" style="color:var(--red)">3 unpaid invoices</div></div>
+          <div class="stat-icon">⏳</div>
+        </div>
+        <div class="stat-card">
+          <div><div class="stat-label">Renewals Today</div><div class="stat-value">₪1,170</div><div class="stat-sub">3 auto-renewals</div></div>
+          <div class="stat-icon">🔄</div>
+        </div>
+        <div class="stat-card">
+          <div><div class="stat-label">New Members</div><div class="stat-value">₪580</div><div class="stat-sub">2 this week</div></div>
+          <div class="stat-icon">🆕</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Transaction History</div>
+          <div style="display:flex;gap:8px">
+            <button class="topbar-btn secondary" onclick="openModal('modal-payment-report')">📊 Payment Report</button>
+            <button class="topbar-btn" onclick="openModal('modal-add-payment')">+ Record Payment</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Date</th><th>Client</th><th>Plan</th><th>Method</th><th>Amount</th><th>Status</th><th>Invoice</th>
+            </tr></thead>
+            <tbody>
+              <tr><td>Mar 23</td><td><div class="client-cell"><div class="client-avatar" style="background:#6B46C1;width:26px;height:26px;font-size:11px">S</div><div class="client-name">Shira Cohen</div></div></td><td>Monthly Unlimited</td><td>💳 Card</td><td class="payment-amount positive">+₪390</td><td><span class="badge badge-green">Paid</span></td><td><button class="icon-btn" onclick="showToast('📄 Invoice downloaded!')">📄</button></td></tr>
+              <tr><td>Mar 23</td><td><div class="client-cell"><div class="client-avatar" style="background:#2C5282;width:26px;height:26px;font-size:11px">A</div><div class="client-name">Avi Katz</div></div></td><td>Monthly Unlimited</td><td>💳 Card</td><td class="payment-amount positive">+₪390</td><td><span class="badge badge-green">Paid</span></td><td><button class="icon-btn" onclick="showToast('📄 Invoice downloaded!')">📄</button></td></tr>
+              <tr><td>Mar 22</td><td><div class="client-cell"><div class="client-avatar" style="background:#C05621;width:26px;height:26px;font-size:11px">T</div><div class="client-name">Tamar Ben-David</div></div></td><td>10-Class Pack</td><td>💵 Cash</td><td class="payment-amount positive">+₪290</td><td><span class="badge badge-green">Paid</span></td><td><button class="icon-btn" onclick="showToast('📄 Invoice downloaded!')">📄</button></td></tr>
+              <tr><td>Mar 21</td><td><div class="client-cell"><div class="client-avatar" style="background:#276749;width:26px;height:26px;font-size:11px">Y</div><div class="client-name">Yael Shapira</div></div></td><td>10-Class Pack</td><td>💳 Card</td><td class="payment-amount positive">+₪290</td><td><span class="badge badge-green">Paid</span></td><td><button class="icon-btn" onclick="showToast('📄 Invoice downloaded!')">📄</button></td></tr>
+              <tr><td>Mar 20</td><td><div class="client-cell"><div class="client-avatar" style="background:#2C7A7B;width:26px;height:26px;font-size:11px">R</div><div class="client-name">Ron Levi</div></div></td><td>Drop-In × 2</td><td>📲 Transfer</td><td class="payment-amount positive">+₪90</td><td><span class="badge badge-green">Paid</span></td><td><button class="icon-btn" onclick="showToast('📄 Invoice downloaded!')">📄</button></td></tr>
+              <tr><td>Mar 19</td><td><div class="client-cell"><div class="client-avatar" style="background:#805AD5;width:26px;height:26px;font-size:11px">D</div><div class="client-name">Dina Mizrahi</div></div></td><td>Monthly Unlimited</td><td>💳 Card</td><td class="payment-amount positive">+₪390</td><td><span class="badge badge-orange">Pending</span></td><td><button class="icon-btn" onclick="showToast('📄 Invoice downloaded!')">📄</button></td></tr>
+              <tr><td>Mar 15</td><td><div class="client-cell"><div class="client-avatar" style="background:#9B2C2C;width:26px;height:26px;font-size:11px">M</div><div class="client-name">Moshe Peretz</div></div></td><td>10-Class Pack</td><td>💵 Cash</td><td class="payment-amount positive">+₪290</td><td><span class="badge badge-green">Paid</span></td><td><button class="icon-btn" onclick="showToast('📄 Invoice downloaded!')">📄</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PAGE: MESSAGES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="page" id="page-messages">
+      <div class="section-title">Messages & Notifications</div>
+      <div class="section-sub">Send WhatsApp & push notifications to clients</div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">💬 Send WhatsApp Message</div>
+          <div class="form-row"><label>To</label>
+            <select><option>All Active Members (47)</option><option>Expiring Memberships (5)</option><option>Monday Class Attendees</option><option>Inactive Clients (5)</option><option>Individual Client...</option></select>
+          </div>
+          <div class="form-row"><label>Template</label>
+            <select onchange="fillTemplate(this)">
+              <option value="">Custom message...</option>
+              <option value="renewal">Membership Renewal Reminder</option>
+              <option value="classreminder">Class Reminder</option>
+              <option value="newclass">New Class Announcement</option>
+              <option value="birthday">Birthday Greeting</option>
+            </select>
+          </div>
+          <div class="form-row"><label>Message</label>
+            <textarea id="msg-body" rows="5" style="resize:vertical" placeholder="Type your message here..."></textarea>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="showToast('📲 WhatsApp message sent to 47 clients!')">📲 Send via WhatsApp</button>
+            <button class="btn btn-ghost" onclick="showToast('🔔 Push notification sent!')">🔔 Send Push</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">⚡ Automated Reminders</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+              <div><div style="font-weight:600;font-size:13.5px">Class Reminder</div><div style="font-size:12px;color:var(--text-muted)">2h before class · WhatsApp</div></div>
+              <div class="badge badge-green">ON</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+              <div><div style="font-weight:600;font-size:13.5px">Membership Expiry</div><div style="font-size:12px;color:var(--text-muted)">7 days & 1 day before · WhatsApp</div></div>
+              <div class="badge badge-green">ON</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+              <div><div style="font-weight:600;font-size:13.5px">Low Sessions Alert</div><div style="font-size:12px;color:var(--text-muted)">When 2 sessions remain · WhatsApp</div></div>
+              <div class="badge badge-green">ON</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+              <div><div style="font-weight:600;font-size:13.5px">Re-engagement</div><div style="font-size:12px;color:var(--text-muted)">After 14 days inactive · WhatsApp</div></div>
+              <div class="badge badge-orange">PAUSED</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+              <div><div style="font-weight:600;font-size:13.5px">Birthday Greeting</div><div style="font-size:12px;color:var(--text-muted)">On birthday · WhatsApp</div></div>
+              <div class="badge badge-green">ON</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PAGE: ANALYTICS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="page" id="page-analytics">
+      <div class="section-title">Analytics</div>
+      <div class="section-sub">Business performance overview</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div><div class="stat-label">Retention Rate</div><div class="stat-value">84%</div><div class="stat-sub">↑ +2% this month</div></div><div class="stat-icon">💚</div></div>
+        <div class="stat-card"><div><div class="stat-label">Avg Classes/Member</div><div class="stat-value">6.2</div><div class="stat-sub">per month</div></div><div class="stat-icon">📊</div></div>
+        <div class="stat-card"><div><div class="stat-label">Churn Rate</div><div class="stat-value">6%</div><div class="stat-sub" style="color:var(--green)">↓ -1% vs last month</div></div><div class="stat-icon">📉</div></div>
+        <div class="stat-card"><div><div class="stat-label">Avg Revenue/Member</div><div class="stat-value">₪175</div><div class="stat-sub">↑ +8%</div></div><div class="stat-icon">💰</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">📈 Revenue (Last 6 Months)</div>
+          <svg viewBox="0 0 400 160" style="width:100%;height:160px">
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6B46C1" stop-opacity="0.3"/><stop offset="100%" stop-color="#6B46C1" stop-opacity="0"/></linearGradient></defs>
+            <polyline fill="url(#g1)" stroke="none" points="20,120 87,100 153,90 220,70 287,65 353,50 380,50 380,140 20,140"/>
+            <polyline fill="none" stroke="#6B46C1" stroke-width="2.5" stroke-linecap="round" points="20,120 87,100 153,90 220,70 287,65 353,50"/>
+            <circle cx="20" cy="120" r="4" fill="#6B46C1"/>
+            <circle cx="87" cy="100" r="4" fill="#6B46C1"/>
+            <circle cx="153" cy="90" r="4" fill="#6B46C1"/>
+            <circle cx="220" cy="70" r="4" fill="#6B46C1"/>
+            <circle cx="287" cy="65" r="4" fill="#6B46C1"/>
+            <circle cx="353" cy="50" r="5" fill="#6B46C1"/>
+            <text x="20" y="150" font-size="10" fill="#888" text-anchor="middle">Oct</text>
+            <text x="87" y="150" font-size="10" fill="#888" text-anchor="middle">Nov</text>
+            <text x="153" y="150" font-size="10" fill="#888" text-anchor="middle">Dec</text>
+            <text x="220" y="150" font-size="10" fill="#888" text-anchor="middle">Jan</text>
+            <text x="287" y="150" font-size="10" fill="#888" text-anchor="middle">Feb</text>
+            <text x="353" y="150" font-size="10" fill="#888" text-anchor="middle">Mar</text>
+            <text x="353" y="44" font-size="10" fill="#6B46C1" font-weight="bold" text-anchor="middle">₪8,240</text>
+          </svg>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🧘 Most Popular Classes</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>Morning Yoga Flow</span><span style="font-weight:700;color:var(--purple)">98%</span></div><div class="progress-bar"><div class="progress-fill" style="width:98%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>Pilates Core</span><span style="font-weight:700;color:var(--purple)">82%</span></div><div class="progress-bar"><div class="progress-fill" style="width:82%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>Vinyasa Flow</span><span style="font-weight:700;color:var(--purple)">74%</span></div><div class="progress-bar"><div class="progress-fill" style="width:74%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>Yin Yoga</span><span style="font-weight:700;color:var(--purple)">68%</span></div><div class="progress-bar"><div class="progress-fill" style="width:68%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>Power Yoga</span><span style="font-weight:700;color:var(--purple)">55%</span></div><div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PAGE: SETTINGS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="page" id="page-settings">
+      <div class="section-title">Settings</div>
+      <div class="section-sub">Configure your studio app</div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🏢 Studio Info</div>
+          <div class="form-row"><label>Studio Name</label><input value="My Yoga & Pilates Studio"/></div>
+          <div class="form-row"><label>Owner Name</label><input value="Aviv"/></div>
+          <div class="form-row"><label>Phone</label><input value="+972 50-000-0000"/></div>
+          <div class="form-row"><label>Email</label><input value="avivarad@gmail.com"/></div>
+          <div class="form-row"><label>Address</label><input value="Tel Aviv, Israel"/></div>
+          <div class="form-row"><label>Currency</label><select><option>₪ ILS – Israeli Shekel</option><option>$ USD</option><option>€ EUR</option></select></div>
+          <button class="btn btn-primary" onclick="showToast('✅ Settings saved!')">Save Changes</button>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title" style="margin-bottom:14px">🔔 Notification Settings</div>
+            <div class="form-row"><label>Class Reminder (hours before)</label><input type="number" value="2"/></div>
+            <div class="form-row"><label>Membership Expiry Alert (days before)</label><input type="number" value="7"/></div>
+            <div class="form-row"><label>WhatsApp Provider</label><select><option>Green API (Israel)</option><option>Twilio</option></select></div>
+            <button class="btn btn-ghost" onclick="showToast('✅ Notification settings saved!')">Save</button>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px">💳 Payment Settings</div>
+            <div class="form-row"><label>Payment Provider</label><select><option>PayPlus (Israel)</option><option>Stripe</option></select></div>
+            <div class="form-row"><label>Cancellation Cutoff (hours)</label><input type="number" value="2"/></div>
+            <button class="btn btn-ghost" onclick="showToast('✅ Payment settings saved!')">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end .content -->
+</div><!-- end .main -->
+
+<!-- ══════════════════════════════════════════ -->
+<!-- MODALS -->
+<!-- ══════════════════════════════════════════ -->
+
+<!-- Add Class Modal -->
+<div class="modal-overlay" id="modal-add-class" onclick="closeOnOverlay(event,'modal-add-class')">
+  <div class="modal">
+    <h2>📅 Add New Class</h2>
+    <div class="form-two">
+      <div class="form-row"><label>Class Name</label><input placeholder="e.g. Morning Yoga Flow"/></div>
+      <div class="form-row"><label>Instructor</label><select><option>Maya</option><option>Dana</option><option>Noa</option></select></div>
+    </div>
+    <div class="form-two">
+      <div class="form-row"><label>Date</label><input type="date"/></div>
+      <div class="form-row"><label>Time</label><input type="time" value="09:00"/></div>
+    </div>
+    <div class="form-two">
+      <div class="form-row"><label>Duration (min)</label><input type="number" value="60"/></div>
+      <div class="form-row"><label>Max Capacity</label><input type="number" value="12"/></div>
+    </div>
+    <div class="form-row"><label>Class Type</label>
+      <select><option>Yoga</option><option>Pilates</option><option>Vinyasa</option><option>Yin Yoga</option><option>Power Yoga</option></select>
+    </div>
+    <div class="form-row"><label>Recurring?</label>
+      <select><option>One-time</option><option>Weekly (same day)</option><option>Daily</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-class')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-class');showToast('✅ Class added to schedule!')">Add Class</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Client Modal -->
+<div class="modal-overlay" id="modal-add-client" onclick="closeOnOverlay(event,'modal-add-client')">
+  <div class="modal">
+    <h2>👤 Add New Client</h2>
+    <div class="form-two">
+      <div class="form-row"><label>First Name</label><input placeholder="Sarah"/></div>
+      <div class="form-row"><label>Last Name</label><input placeholder="Cohen"/></div>
+    </div>
+    <div class="form-two">
+      <div class="form-row"><label>Phone</label><input placeholder="+972 50-000-0000"/></div>
+      <div class="form-row"><label>Email</label><input placeholder="sarah@email.com"/></div>
+    </div>
+    <div class="form-two">
+      <div class="form-row"><label>Date of Birth</label><input type="date"/></div>
+      <div class="form-row"><label>Experience Level</label><select><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
+    </div>
+    <div class="form-row"><label>Health Notes / Injuries</label><textarea rows="2" placeholder="Any injuries, conditions, or special notes..."></textarea></div>
+    <div class="form-row"><label>Assign Plan</label>
+      <select><option>None for now</option><option>10-Class Pack (₪290)</option><option>Monthly Unlimited (₪390/mo)</option><option>Drop-In (₪45/class)</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-client')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-client');showToast('✅ Client added! WhatsApp welcome sent 📲')">Add Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Membership Modal -->
+<div class="modal-overlay" id="modal-add-membership" onclick="closeOnOverlay(event,'modal-add-membership')">
+  <div class="modal">
+    <h2>💳 Assign Membership Plan</h2>
+    <div class="form-row"><label>Client</label><select><option>Shira Cohen</option><option>Ron Levi</option><option>Tamar Ben-David</option><option>Yael Shapira</option></select></div>
+    <div class="form-row"><label>Plan</label><select><option>10-Class Pack (₪290)</option><option>Monthly Unlimited (₪390/mo)</option><option>Drop-In (₪45/class)</option></select></div>
+    <div class="form-two">
+      <div class="form-row"><label>Start Date</label><input type="date"/></div>
+      <div class="form-row"><label>Payment Method</label><select><option>Card (Stripe)</option><option>Cash</option><option>Bank Transfer</option></select></div>
+    </div>
+    <div class="form-row"><label>Auto-Renew?</label><select><option>Yes – auto-renew monthly</option><option>No – one-time</option></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-membership')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-membership');showToast('✅ Membership assigned! Invoice sent via WhatsApp 📲')">Assign & Charge</button>
+    </div>
+  </div>
+</div>
+
+<!-- Record Payment Modal -->
+<div class="modal-overlay" id="modal-add-payment" onclick="closeOnOverlay(event,'modal-add-payment')">
+  <div class="modal">
+    <h2>💰 Record Manual Payment</h2>
+    <div class="form-row"><label>Client</label><select><option>Shira Cohen</option><option>Ron Levi</option><option>Tamar Ben-David</option><option>Yael Shapira</option><option>Avi Katz</option></select></div>
+    <div class="form-row"><label>Plan / Description</label><select><option>10-Class Pack</option><option>Monthly Unlimited</option><option>Drop-In Class</option><option>Other...</option></select></div>
+    <div class="form-two">
+      <div class="form-row"><label>Amount (₪)</label><input type="number" placeholder="290"/></div>
+      <div class="form-row"><label>Payment Method</label><select><option>Cash</option><option>Bank Transfer</option><option>Card</option></select></div>
+    </div>
+    <div class="form-row"><label>Notes</label><input placeholder="Optional note..."/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-payment')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-payment');showToast('✅ Payment recorded! Receipt sent via WhatsApp 📲')">Record & Send Receipt</button>
+    </div>
+  </div>
+</div>
+
+<!-- Class Detail Modal -->
+<div class="modal-overlay" id="modal-class-detail" onclick="closeOnOverlay(event,'modal-class-detail')">
+  <div class="modal">
+    <h2 id="cd-title">Class Details</h2>
+    <div class="info-grid" style="margin-bottom:16px">
+      <div class="info-field"><div class="info-field-label">Time</div><div class="info-field-value" id="cd-time">–</div></div>
+      <div class="info-field"><div class="info-field-label">Instructor</div><div class="info-field-value" id="cd-instructor">–</div></div>
+      <div class="info-field"><div class="info-field-label">Spots</div><div class="info-field-value" id="cd-spots">–</div></div>
+      <div class="info-field"><div class="info-field-label">Day</div><div class="info-field-value" id="cd-day">–</div></div>
+    </div>
+    <h3>Registered Clients</h3>
+    <div id="cd-clients" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-class-detail')">Close</button>
+      <button class="btn btn-danger" onclick="closeModal('modal-class-detail');showToast('❌ Class cancelled. All clients notified via WhatsApp 📲')">Cancel Class</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-class-detail');showToast('✅ Attendance marked!')">Mark Attendance</button>
+    </div>
+  </div>
+</div>
+
+<!-- Client Profile Modal -->
+<div class="modal-overlay" id="modal-client-profile" onclick="closeOnOverlay(event,'modal-client-profile')">
+  <div class="modal" style="width:620px">
+    <div class="profile-header">
+      <div class="profile-avatar" id="cp-avatar" style="background:#6B46C1">S</div>
+      <div>
+        <div class="profile-name" id="cp-name">Shira Cohen</div>
+        <div class="profile-meta" id="cp-meta">📞 050-123-4567 · ✉️ shira@email.com</div>
+        <div class="profile-badges">
+          <span class="badge badge-green" id="cp-status">Active</span>
+          <span class="badge badge-purple" id="cp-plan">Monthly Unlimited</span>
+        </div>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this,'cp-tab-info')">Info</div>
+      <div class="tab" onclick="switchTab(this,'cp-tab-bookings')">Bookings</div>
+      <div class="tab" onclick="switchTab(this,'cp-tab-payments')">Payments</div>
+      <div class="tab" onclick="switchTab(this,'cp-tab-notes')">Notes</div>
+    </div>
+    <div class="tab-content active" id="cp-tab-info">
+      <div class="info-grid">
+        <div class="info-field"><div class="info-field-label">Phone</div><div class="info-field-value">050-123-4567</div></div>
+        <div class="info-field"><div class="info-field-label">Email</div><div class="info-field-value">shira@email.com</div></div>
+        <div class="info-field"><div class="info-field-label">Date of Birth</div><div class="info-field-value">April 12, 1990</div></div>
+        <div class="info-field"><div class="info-field-label">Member Since</div><div class="info-field-value">January 2025</div></div>
+        <div class="info-field"><div class="info-field-label">Experience Level</div><div class="info-field-value">Intermediate</div></div>
+        <div class="info-field"><div class="info-field-label">Total Classes</div><div class="info-field-value">48</div></div>
+      </div>
+      <div class="info-field" style="margin-top:12px">
+        <div class="info-field-label">Sessions Progress</div>
+        <div style="font-size:13px;color:var(--text-muted);margin:4px 0">Unlimited plan — ∞ sessions remaining</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+    <div class="tab-content" id="cp-tab-bookings">
+      <table><thead><tr><th>Date</th><th>Class</th><th>Instructor</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Mar 23</td><td>Pilates Core</td><td>Dana</td><td><span class="badge badge-blue">Upcoming</span></td></tr>
+        <tr><td>Mar 21</td><td>Yin Yoga</td><td>Noa</td><td><span class="badge badge-green">Attended</span></td></tr>
+        <tr><td>Mar 18</td><td>Yoga Flow</td><td>Maya</td><td><span class="badge badge-green">Attended</span></td></tr>
+        <tr><td>Mar 14</td><td>Pilates Core</td><td>Dana</td><td><span class="badge badge-green">Attended</span></td></tr>
+        <tr><td>Mar 11</td><td>Vinyasa</td><td>Maya</td><td><span class="badge badge-red">Cancelled</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="tab-content" id="cp-tab-payments">
+      <table><thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Method</th></tr></thead>
+      <tbody>
+        <tr><td>Mar 1</td><td>Monthly Unlimited</td><td class="payment-amount positive">+₪390</td><td>💳 Card</td></tr>
+        <tr><td>Feb 1</td><td>Monthly Unlimited</td><td class="payment-amount positive">+₪390</td><td>💳 Card</td></tr>
+        <tr><td>Jan 1</td><td>Monthly Unlimited</td><td class="payment-amount positive">+₪390</td><td>💳 Card</td></tr>
+      </tbody></table>
+    </div>
+    <div class="tab-content" id="cp-tab-notes">
+      <div class="form-row"><label>Private Notes (not visible to client)</label>
+        <textarea rows="4" placeholder="Add a note...">Prefers front row. Slight lower back issue — avoid deep forward folds. Very motivated, good candidate for advanced class.</textarea>
+      </div>
+      <button class="btn btn-primary" onclick="showToast('✅ Note saved!')">Save Note</button>
+    </div>
+    <div class="modal-actions" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px">
+      <button class="whatsapp-btn" onclick="showToast('📲 WhatsApp opened for Shira!')">📲 WhatsApp</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-client-profile')">Close</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-client-profile');showToast('✅ Profile saved!')">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Report Modal -->
+<div class="modal-overlay" id="modal-payment-report" onclick="closeOnOverlay(event,'modal-payment-report')">
+  <div class="modal" style="width:680px">
+    <h2>📊 Payment Report</h2>
+
+    <!-- Filters -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px;padding:14px 16px;background:var(--bg);border-radius:10px">
+      <div class="form-row" style="margin:0">
+        <label>Date Range</label>
+        <select id="rpt-range" onchange="updateReport()">
+          <option value="this_month">This Month (March 2026)</option>
+          <option value="last_month">Last Month (February 2026)</option>
+          <option value="last_3">Last 3 Months</option>
+          <option value="last_6">Last 6 Months</option>
+          <option value="this_year">This Year (2026)</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
+      <div class="form-row" style="margin:0">
+        <label>Plan Type</label>
+        <select id="rpt-plan" onchange="updateReport()">
+          <option value="all">All Plans</option>
+          <option value="Monthly Unlimited">Monthly Unlimited</option>
+          <option value="10-Class Pack">10-Class Pack</option>
+          <option value="Drop-In">Drop-In</option>
+        </select>
+      </div>
+      <div class="form-row" style="margin:0">
+        <label>Payment Method</label>
+        <select id="rpt-method" onchange="updateReport()">
+          <option value="all">All Methods</option>
+          <option value="Card">Card</option>
+          <option value="Cash">Cash</option>
+          <option value="Transfer">Transfer</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Summary KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px" id="rpt-kpis">
+    </div>
+
+    <!-- Breakdown by Plan -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:8px">Revenue by Plan</div>
+        <div id="rpt-by-plan"></div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:8px">Revenue by Method</div>
+        <div id="rpt-by-method"></div>
+      </div>
+    </div>
+
+    <!-- Transaction List -->
+    <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:8px">Transactions in Period</div>
+    <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:var(--purple-light);position:sticky;top:0">
+          <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase">Date</th>
+          <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase">Client</th>
+          <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase">Plan</th>
+          <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase">Method</th>
+          <th style="padding:8px 10px;text-align:right;font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase">Amount</th>
+          <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase">Status</th>
+        </tr></thead>
+        <tbody id="rpt-transactions"></tbody>
+      </table>
+    </div>
+
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-payment-report')">Close</button>
+      <button class="btn btn-ghost" onclick="showToast('🖨 Opening print dialog...');window.print()">🖨 Print</button>
+      <button class="btn btn-primary" onclick="exportReportCSV()">📥 Export CSV</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- JAVASCRIPT -->
+<!-- ══════════════════════════════════════════ -->
+<script>
+// ── Navigation ────────────────────────────────
+const pageMap = {
+  dashboard:   { title: '🏠 Dashboard',      action: '+ Add Class',   actionFn: ()=>openModal('modal-add-class') },
+  schedule:    { title: '📅 Schedule',        action: '+ Add Class',   actionFn: ()=>openModal('modal-add-class') },
+  clients:     { title: '👥 Clients',         action: '+ New Client',  actionFn: ()=>openModal('modal-add-client') },
+  memberships: { title: '💳 Memberships',     action: '+ Assign Plan', actionFn: ()=>openModal('modal-add-membership') },
+  payments:    { title: '💰 Payments',        action: '+ Record Payment', actionFn: ()=>openModal('modal-add-payment') },
+  messages:    { title: '💬 Messages',        action: '📲 Send Now',   actionFn: ()=>showToast('📲 Opening send panel...') },
+  analytics:   { title: '📊 Analytics',       action: '📥 Export CSV', actionFn: ()=>showToast('📥 CSV downloaded!') },
+  settings:    { title: '⚙️ Settings',        action: '💾 Save All',   actionFn: ()=>showToast('✅ All settings saved!') },
+};
+
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  const m = pageMap[page];
+  document.getElementById('topbar-title').innerHTML = m.title.replace(/^(.)/, '<span>$1</span>').replace(/^<span>(.)/, '<span>$1');
+  document.getElementById('topbar-title').textContent = '';
+  const t = document.getElementById('topbar-title');
+  const parts = m.title.split(' ');
+  t.innerHTML = parts[0] + ' <span>' + parts.slice(1).join(' ') + '</span>';
+  document.getElementById('topbar-action').textContent = m.action;
+  window._currentAction = m.actionFn;
+}
+
+function topbarAction() { if (window._currentAction) window._currentAction(); }
+window._currentAction = ()=>openModal('modal-add-class');
+
+// ── Modals ────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+document.addEventListener('keydown', e => { if (e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open')); });
+
+// ── Toasts ────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3200);
+}
+
+// ── Class Detail Modal ────────────────────────
+function openClassModal(name, time, instructor, spots, day) {
+  document.getElementById('cd-title').textContent = '📅 ' + name;
+  document.getElementById('cd-time').textContent = time;
+  document.getElementById('cd-instructor').textContent = instructor;
+  document.getElementById('cd-spots').textContent = spots;
+  document.getElementById('cd-day').textContent = day;
+  const names = ['Shira Cohen','Ron Levi','Tamar Ben-David','Yael Shapira','Avi Katz','Dana Mizrahi','Moshe Peretz'];
+  const colors = ['#6B46C1','#2C7A7B','#C05621','#276749','#2C5282','#805AD5','#9B2C2C'];
+  const count = Math.min(parseInt(spots), 5);
+  const container = document.getElementById('cd-clients');
+  container.innerHTML = '';
+  for (let i=0; i<count; i++) {
+    const div = document.createElement('div');
+    div.style = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);border-radius:8px';
+    div.innerHTML = `<div class="client-cell"><div class="client-avatar" style="background:${colors[i%colors.length]};width:28px;height:28px;font-size:11px">${names[i][0]}</div><div style="font-size:13px;font-weight:600">${names[i]}</div></div><span class="badge badge-green">✓ Registered</span>`;
+    container.appendChild(div);
+  }
+  openModal('modal-class-detail');
+}
+
+// ── Client Table ──────────────────────────────
+let clients = [
+  { name:'Shira Cohen',    initials:'S', color:'#6B46C1', phone:'050-123-4567', plan:'Monthly Unlimited', plan_badge:'badge-purple', sessions:'∞',    status:'Active',    status_badge:'badge-green',  last:'Mar 21' },
+  { name:'Ron Levi',       initials:'R', color:'#2C7A7B', phone:'052-234-5678', plan:'10-Class Pack',     plan_badge:'badge-blue',   sessions:'7',     status:'Active',    status_badge:'badge-green',  last:'Mar 20' },
+  { name:'Tamar Ben-David',initials:'T', color:'#C05621', phone:'054-345-6789', plan:'Monthly Unlimited', plan_badge:'badge-purple', sessions:'∞',    status:'Expiring',  status_badge:'badge-orange', last:'Mar 19' },
+  { name:'Yael Shapira',   initials:'Y', color:'#276749', phone:'050-456-7890', plan:'10-Class Pack',     plan_badge:'badge-blue',   sessions:'2',     status:'Active',    status_badge:'badge-green',  last:'Mar 22' },
+  { name:'Avi Katz',       initials:'A', color:'#2C5282', phone:'053-567-8901', plan:'Monthly Unlimited', plan_badge:'badge-purple', sessions:'∞',    status:'Active',    status_badge:'badge-green',  last:'Mar 23' },
+  { name:'Dina Mizrahi',   initials:'D', color:'#805AD5', phone:'058-678-9012', plan:'Drop-In',           plan_badge:'badge-grey',   sessions:'1',     status:'Active',    status_badge:'badge-green',  last:'Mar 18' },
+  { name:'Moshe Peretz',   initials:'M', color:'#9B2C2C', phone:'050-789-0123', plan:'10-Class Pack',     plan_badge:'badge-blue',   sessions:'5',     status:'Active',    status_badge:'badge-green',  last:'Mar 15' },
+  { name:'Liora Goldberg', initials:'L', color:'#B7791F', phone:'052-890-1234', plan:'Monthly Unlimited', plan_badge:'badge-purple', sessions:'∞',    status:'Inactive',  status_badge:'badge-grey',   last:'Feb 28' },
+  { name:'Nir Feldman',    initials:'N', color:'#276749', phone:'054-901-2345', plan:'10-Class Pack',     plan_badge:'badge-blue',   sessions:'0',     status:'Inactive',  status_badge:'badge-grey',   last:'Feb 20' },
+  { name:'Hila Saar',      initials:'H', color:'#553C9A', phone:'050-012-3456', plan:'Monthly Unlimited', plan_badge:'badge-purple', sessions:'∞',    status:'Active',    status_badge:'badge-green',  last:'Mar 22' },
+];
+
+function renderClients(list) {
+  const tbody = document.getElementById('clients-tbody');
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td><div class="client-cell"><div class="client-avatar" style="background:${c.color}">${c.initials}</div><div><div class="client-name">${c.name}</div><div class="client-email">${c.phone}</div></div></div></td>
+      <td>${c.phone}</td>
+      <td><span class="badge ${c.plan_badge}">${c.plan}</span></td>
+      <td style="font-weight:700;color:${c.sessions==='0'?'var(--red)':c.sessions==='∞'?'var(--green)':'var(--text)'}">${c.sessions}</td>
+      <td><span class="badge ${c.status_badge}">${c.status}</span></td>
+      <td>${c.last}</td>
+      <td>
+        <button class="icon-btn" title="View Profile" onclick="openClientProfile('${c.name}','${c.initials}','${c.color}','${c.plan}','${c.status}')">👁</button>
+        <button class="whatsapp-btn" onclick="showToast('📲 WhatsApp opened for ${c.name}!')">📲</button>
+      </td>
+    </tr>
+  `).join('');
+}
+renderClients(clients);
+
+function filterClients(val) {
+  const q = val.toLowerCase();
+  renderClients(clients.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q) || c.plan.toLowerCase().includes(q)));
+}
+
+function toggleFilter(btn, filter) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if (filter==='All') renderClients(clients);
+  else renderClients(clients.filter(c=>c.status===filter));
+}
+
+function openClientProfile(name, initials, color, plan, status) {
+  document.getElementById('cp-avatar').textContent = initials;
+  document.getElementById('cp-avatar').style.background = color;
+  document.getElementById('cp-name').textContent = name;
+  document.getElementById('cp-plan').textContent = plan;
+  openModal('modal-client-profile');
+}
+
+// ── Tabs ──────────────────────────────────────
+function switchTab(tabEl, contentId) {
+  const modal = tabEl.closest('.modal');
+  modal.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  modal.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.getElementById(contentId).classList.add('active');
+}
+
+// ── WhatsApp Templates ─────────────────────────
+function fillTemplate(sel) {
+  const templates = {
+    renewal: 'Hi {name} 👋 Just a reminder that your membership at My Studio expires on {date}. Tap here to renew easily: {link} 🧘‍♀️',
+    classreminder: 'Hi {name}! Reminder that your class starts in 2 hours 🕐\n📍 My Yoga & Pilates Studio\nSee you soon! 🧘',
+    newclass: 'Hi {name}! We just added a new class to the schedule 🎉\n📅 {class_name} · {day} at {time}\nBook your spot now before it fills up! 👉 {link}',
+    birthday: 'Happy Birthday {name}! 🎂🎉\nWishing you a wonderful day! As a gift from us, here\'s 10% off your next membership renewal. 🎁',
+  };
+  const ta = document.getElementById('msg-body');
+  ta.value = templates[sel.value] || '';
+}
+
+// ── Payment Report ────────────────────────────
+const allTransactions = [
+  { date:'Mar 23, 2026', client:'Shira Cohen',     plan:'Monthly Unlimited', method:'Card',     amount:390, status:'Paid' },
+  { date:'Mar 23, 2026', client:'Avi Katz',         plan:'Monthly Unlimited', method:'Card',     amount:390, status:'Paid' },
+  { date:'Mar 22, 2026', client:'Tamar Ben-David',  plan:'10-Class Pack',     method:'Cash',     amount:290, status:'Paid' },
+  { date:'Mar 21, 2026', client:'Yael Shapira',     plan:'10-Class Pack',     method:'Card',     amount:290, status:'Paid' },
+  { date:'Mar 20, 2026', client:'Ron Levi',          plan:'Drop-In',           method:'Transfer', amount:90,  status:'Paid' },
+  { date:'Mar 19, 2026', client:'Dina Mizrahi',      plan:'Monthly Unlimited', method:'Card',     amount:390, status:'Pending' },
+  { date:'Mar 15, 2026', client:'Moshe Peretz',      plan:'10-Class Pack',     method:'Cash',     amount:290, status:'Paid' },
+  { date:'Mar 10, 2026', client:'Hila Saar',         plan:'Monthly Unlimited', method:'Card',     amount:390, status:'Paid' },
+  { date:'Mar 8, 2026',  client:'Liora Goldberg',    plan:'10-Class Pack',     method:'Transfer', amount:290, status:'Paid' },
+  { date:'Mar 5, 2026',  client:'Nir Feldman',       plan:'Drop-In',           method:'Cash',     amount:45,  status:'Paid' },
+  { date:'Feb 28, 2026', client:'Shira Cohen',       plan:'Monthly Unlimited', method:'Card',     amount:390, status:'Paid' },
+  { date:'Feb 25, 2026', client:'Ron Levi',          plan:'10-Class Pack',     method:'Cash',     amount:290, status:'Paid' },
+  { date:'Feb 20, 2026', client:'Tamar Ben-David',   plan:'Monthly Unlimited', method:'Card',     amount:390, status:'Paid' },
+  { date:'Feb 15, 2026', client:'Avi Katz',          plan:'Monthly Unlimited', method:'Card',     amount:390, status:'Paid' },
+  { date:'Feb 10, 2026', client:'Yael Shapira',      plan:'Drop-In',           method:'Cash',     amount:45,  status:'Paid' },
+  { date:'Feb 5, 2026',  client:'Hila Saar',         plan:'Monthly Unlimited', method:'Card',     amount:390, status:'Paid' },
+  { date:'Jan 30, 2026', client:'Moshe Peretz',      plan:'10-Class Pack',     method:'Cash',     amount:290, status:'Paid' },
+  { date:'Jan 22, 2026', client:'Shira Cohen',       plan:'Monthly Unlimited', method:'Card',     amount:390, status:'Paid' },
+  { date:'Jan 18, 2026', client:'Dina Mizrahi',      plan:'Monthly Unlimited', method:'Card',     amount:390, status:'Paid' },
+  { date:'Jan 10, 2026', client:'Ron Levi',          plan:'Drop-In',           method:'Cash',     amount:90,  status:'Paid' },
+];
+
+function getFilteredTransactions() {
+  const range  = document.getElementById('rpt-range').value;
+  const plan   = document.getElementById('rpt-plan').value;
+  const method = document.getElementById('rpt-method').value;
+  let filtered = allTransactions.filter(t => {
+    const d = t.date;
+    const inRange = (range === 'this_month' && d.includes('Mar 2026')) ||
+                    (range === 'last_month' && d.includes('Feb 2026')) ||
+                    (range === 'last_3' && (d.includes('Mar') || d.includes('Feb') || d.includes('Jan'))) ||
+                    (range === 'last_6' || range === 'all' || range === 'this_year');
+    const planMatch   = plan   === 'all' || t.plan   === plan;
+    const methodMatch = method === 'all' || t.method === method;
+    return inRange && planMatch && methodMatch;
+  });
+  return filtered;
+}
+
+function updateReport() {
+  const txns = getFilteredTransactions();
+  const total     = txns.reduce((s,t) => s + t.amount, 0);
+  const paid      = txns.filter(t=>t.status==='Paid').reduce((s,t)=>s+t.amount,0);
+  const pending   = txns.filter(t=>t.status==='Pending').reduce((s,t)=>s+t.amount,0);
+  const count     = txns.length;
+  const avg       = count ? Math.round(total/count) : 0;
+
+  // KPI cards
+  document.getElementById('rpt-kpis').innerHTML = [
+    ['Total Revenue', '₪'+total.toLocaleString(), 'var(--purple)', '💰'],
+    ['Paid',          '₪'+paid.toLocaleString(),  'var(--green)',  '✅'],
+    ['Pending',       '₪'+pending.toLocaleString(),'#DD6B20',      '⏳'],
+    ['Avg / Transaction','₪'+avg,'var(--blue)','📊'],
+  ].map(([label,val,color,icon])=>`
+    <div style="background:var(--bg);border-radius:8px;padding:12px 14px;text-align:center">
+      <div style="font-size:20px;margin-bottom:4px">${icon}</div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);font-weight:600">${label}</div>
+      <div style="font-size:22px;font-weight:800;color:${color};margin-top:2px">${val}</div>
+    </div>
+  `).join('');
+
+  // By Plan
+  const byPlan = {};
+  txns.forEach(t => { byPlan[t.plan] = (byPlan[t.plan]||0) + t.amount; });
+  const planColors = {'Monthly Unlimited':'#6B46C1','10-Class Pack':'#3182CE','Drop-In':'#38A169'};
+  document.getElementById('rpt-by-plan').innerHTML = Object.entries(byPlan).sort((a,b)=>b[1]-a[1]).map(([plan,amt])=>{
+    const pct = total ? Math.round(amt/total*100) : 0;
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px">
+        <span style="font-weight:600">${plan}</span>
+        <span style="font-weight:700;color:${planColors[plan]||'var(--purple)'}">₪${amt.toLocaleString()} <span style="color:var(--text-muted);font-weight:400">(${pct}%)</span></span>
+      </div>
+      <div style="background:var(--border);border-radius:4px;height:7px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;border-radius:4px;background:${planColors[plan]||'var(--purple)'}"></div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text-muted);font-size:13px">No data</div>';
+
+  // By Method
+  const byMethod = {};
+  txns.forEach(t => { byMethod[t.method] = (byMethod[t.method]||0) + t.amount; });
+  const methodColors = {'Card':'#3182CE','Cash':'#38A169','Transfer':'#DD6B20'};
+  const methodIcons  = {'Card':'💳','Cash':'💵','Transfer':'📲'};
+  document.getElementById('rpt-by-method').innerHTML = Object.entries(byMethod).sort((a,b)=>b[1]-a[1]).map(([method,amt])=>{
+    const pct = total ? Math.round(amt/total*100) : 0;
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px">
+        <span style="font-weight:600">${methodIcons[method]||''} ${method}</span>
+        <span style="font-weight:700;color:${methodColors[method]||'var(--purple)'}">₪${amt.toLocaleString()} <span style="color:var(--text-muted);font-weight:400">(${pct}%)</span></span>
+      </div>
+      <div style="background:var(--border);border-radius:4px;height:7px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;border-radius:4px;background:${methodColors[method]||'var(--purple)'}"></div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text-muted);font-size:13px">No data</div>';
+
+  // Transactions table
+  const statusBadge = s => s==='Paid' ? '<span class="badge badge-green">Paid</span>' : '<span class="badge badge-orange">Pending</span>';
+  document.getElementById('rpt-transactions').innerHTML = txns.length
+    ? txns.map(t=>`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 10px;font-size:12.5px">${t.date}</td>
+        <td style="padding:8px 10px;font-size:12.5px;font-weight:600">${t.client}</td>
+        <td style="padding:8px 10px;font-size:12.5px">${t.plan}</td>
+        <td style="padding:8px 10px;font-size:12.5px">${t.method}</td>
+        <td style="padding:8px 10px;font-size:12.5px;font-weight:700;color:var(--green);text-align:right">+₪${t.amount}</td>
+        <td style="padding:8px 10px">${statusBadge(t.status)}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-muted)">No transactions match the selected filters.</td></tr>`;
+}
+
+function exportReportCSV() {
+  const txns = getFilteredTransactions();
+  const range = document.getElementById('rpt-range').selectedOptions[0].text;
+  const headers = ['Date','Client','Plan','Payment Method','Amount (ILS)','Status'];
+  const rows = txns.map(t=>[t.date, t.client, t.plan, t.method, t.amount, t.status]);
+  const total = txns.reduce((s,t)=>s+t.amount,0);
+  rows.push(['','','','TOTAL',total,'']);
+  const csv = [headers, ...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `payment_report_${range.replace(/[^a-z0-9]/gi,'_').toLowerCase()}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('📥 CSV downloaded!');
+}
+
+// Initialize report when modal opens
+const _origOpenModal = openModal;
+window.openModal = function(id) {
+  _origOpenModal(id);
+  if (id === 'modal-payment-report') updateReport();
+};
+
+// ── Initial setup ─────────────────────────────
+document.querySelector('.nav-item.active')._page = 'dashboard';
+</script>
+
+<!-- ══ SUPABASE DATA LAYER ══════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async () => {
+  const { createClient } = supabase;
+  const sb = createClient(
+    'https://ncfcyrmvbkhrwcxonnmt.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZmN5cm12YmtocndjeG9ubm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzQ1MzcsImV4cCI6MjA4OTk1MDUzN30.F-2EWzolhWKPzu91T9vrI_nrAZQUwQ8xT0R89KHC3as'
+  );
+
+  const AV_COLORS = ['#6B46C1','#2C7A7B','#C05621','#276749','#2C5282','#805AD5','#9B2C2C','#B7791F','#553C9A','#2B6CB0'];
+  function colorFor(str) { let h=0; for(let c of str) h=(h*31+c.charCodeAt(0))&0xffffffff; return AV_COLORS[Math.abs(h)%AV_COLORS.length]; }
+  function initials(name) { const p=name.trim().split(/\s+/); return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase(); }
+
+  // ── Load clients from Supabase ───────────────
+  async function loadClientsDB() {
+    const { data, error } = await sb
+      .from('clients')
+      .select(`*, client_memberships(*, membership_plans(name, sessions_limit))`)
+      .order('created_at', { ascending: false });
+    if (error) { console.error('clients load error', error); return; }
+
+    clients = (data || []).map(c => {
+      const mem = c.client_memberships?.find(m => m.status === 'active');
+      const plan = mem?.membership_plans?.name || 'No Plan';
+      const sessLeft = mem
+        ? (mem.membership_plans?.sessions_limit == null ? '∞' : String(mem.membership_plans.sessions_limit - (mem.sessions_used||0)))
+        : '—';
+      const planBadge = plan.includes('ללא הגבלה') || plan.toLowerCase().includes('unlimited') ? 'badge-purple'
+                      : plan.includes('כניסות') || plan.toLowerCase().includes('pack') ? 'badge-blue'
+                      : plan === 'No Plan' ? 'badge-grey' : 'badge-grey';
+      const now = new Date();
+      const expiring = mem && new Date(mem.end_date) < new Date(now.getTime() + 7*86400000);
+      const active = mem && new Date(mem.end_date) >= now;
+      const statusVal = !mem ? 'Inactive' : expiring ? 'Expiring' : active ? 'Active' : 'Inactive';
+      const statusBadge = statusVal === 'Active' ? 'badge-green' : statusVal === 'Expiring' ? 'badge-orange' : 'badge-grey';
+      const lastDate = c.created_at ? new Date(c.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
+      return {
+        id: c.id,
+        name: c.name,
+        initials: initials(c.name),
+        color: colorFor(c.name),
+        phone: c.phone || '—',
+        plan, plan_badge: planBadge,
+        sessions: sessLeft,
+        status: statusVal, status_badge: statusBadge,
+        last: lastDate
+      };
+    });
+    renderClients(clients);
+    // update stat cards
+    const activeCount = clients.filter(c=>c.status==='Active').length;
+    const expiringCount = clients.filter(c=>c.status==='Expiring').length;
+    document.querySelectorAll('.stat-card').forEach(card => {
+      const label = card.querySelector('.stat-label');
+      const val = card.querySelector('.stat-value');
+      if (!label || !val) return;
+      if (label.textContent.includes('Active Members')) val.textContent = activeCount;
+      if (label.textContent.includes('Renewing Soon')) val.textContent = expiringCount;
+      if (label.textContent.includes('Total Clients')) val.textContent = clients.length;
+    });
+  }
+
+  // ── Load today's classes ─────────────────────
+  async function loadScheduleDB() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+    const { data } = await sb
+      .from('class_sessions')
+      .select('*, instructors(name)')
+      .gte('start_time', today.toISOString())
+      .lt('start_time', tomorrow.toISOString())
+      .order('start_time');
+    if (!data || !data.length) return;
+    document.querySelectorAll('.stat-card').forEach(card => {
+      const label = card.querySelector('.stat-label');
+      const val = card.querySelector('.stat-value');
+      if (!label || !val) return;
+      if (label.textContent.includes("Today's Classes")) val.textContent = data.length;
+    });
+  }
+
+  // ── Wire "Add Client" to save to Supabase ────
+  function wireAddClient() {
+    const btn = document.querySelector('#modal-add-client .btn-primary');
+    if (!btn) return;
+    btn.onclick = async function() {
+      const inputs = document.querySelectorAll('#modal-add-client input');
+      const selects = document.querySelectorAll('#modal-add-client select');
+      const textarea = document.querySelector('#modal-add-client textarea');
+      const firstName = inputs[0]?.value.trim();
+      const lastName  = inputs[1]?.value.trim();
+      const phone     = inputs[2]?.value.trim();
+      const email     = inputs[3]?.value.trim();
+      const dob       = inputs[4]?.value || null;
+      const level     = selects[0]?.value.toLowerCase() || 'beginner';
+      const injuries  = textarea?.value.trim() || null;
+      if (!firstName) { showToast('⚠️ Please enter a first name'); return; }
+      const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+      const { error } = await sb.from('clients').insert({ name: fullName, phone, email, date_of_birth: dob, experience_level: level, injuries });
+      if (error) { showToast('❌ Error saving client'); console.error(error); return; }
+      closeModal('modal-add-client');
+      document.querySelectorAll('#modal-add-client input, #modal-add-client textarea').forEach(el=>el.value='');
+      showToast('✅ Client added! WhatsApp welcome sent 📲');
+      await loadClientsDB();
+    };
+  }
+
+  // ── Wire "Add Class" to save to Supabase ─────
+  function wireAddClass() {
+    const btn = document.querySelector('#modal-add-class .btn-primary');
+    if (!btn) return;
+    btn.onclick = async function() {
+      const inputs   = document.querySelectorAll('#modal-add-class input');
+      const selects  = document.querySelectorAll('#modal-add-class select');
+      const className   = inputs[0]?.value.trim();
+      const dateVal     = inputs[1]?.value;
+      const timeVal     = inputs[2]?.value || '09:00';
+      const durationMin = parseInt(inputs[3]?.value) || 60;
+      const maxCap      = parseInt(inputs[4]?.value) || 12;
+      const type        = selects[1]?.value.toLowerCase() || 'yoga';
+      if (!className || !dateVal) { showToast('⚠️ Please fill in class name and date'); return; }
+      const startTime = new Date(`${dateVal}T${timeVal}:00`);
+      const endTime   = new Date(startTime.getTime() + durationMin * 60000);
+      const { data: instructorData } = await sb.from('instructors').select('id,name').limit(10);
+      const instrName = selects[0]?.value;
+      const instr = instructorData?.find(i => i.name.includes(instrName) || instrName.includes(i.name.split(' ')[0]));
+      const { error } = await sb.from('class_sessions').insert({
+        name: className, type, instructor_id: instr?.id || null,
+        start_time: startTime.toISOString(), end_time: endTime.toISOString(), max_capacity: maxCap
+      });
+      if (error) { showToast('❌ Error saving class'); console.error(error); return; }
+      closeModal('modal-add-class');
+      document.querySelectorAll('#modal-add-class input').forEach(el=>el.value='');
+      showToast('✅ Class added to schedule!');
+      await loadScheduleDB();
+    };
+  }
+
+  // ── Wire "Record Payment" to save to Supabase ─
+  function wireAddPayment() {
+    const btn = document.querySelector('#modal-add-payment .btn-primary');
+    if (!btn) return;
+    btn.onclick = async function() {
+      const inputs  = document.querySelectorAll('#modal-add-payment input');
+      const selects = document.querySelectorAll('#modal-add-payment select');
+      const clientName = inputs[0]?.value.trim();
+      const amount     = parseFloat(inputs[1]?.value) || 0;
+      const method     = selects[0]?.value.toLowerCase() || 'cash';
+      const description = inputs[2]?.value.trim() || null;
+      if (!clientName || !amount) { showToast('⚠️ Please fill in client and amount'); return; }
+      const matchedClient = clients.find(c=>c.name.toLowerCase().includes(clientName.toLowerCase()));
+      const { error } = await sb.from('payments').insert({
+        client_id: matchedClient?.id || null, amount, method, description,
+        status: 'paid', payment_date: new Date().toISOString().slice(0,10)
+      });
+      if (error) { showToast('❌ Error saving payment'); console.error(error); return; }
+      closeModal('modal-add-payment');
+      document.querySelectorAll('#modal-add-payment input').forEach(el=>el.value='');
+      showToast('✅ Payment recorded! Receipt sent via WhatsApp 📲');
+    };
+  }
+
+  // ── Override navigate() to refresh on page switch ─
+  const _origNavigate = window.navigate;
+  window.navigate = function(page, el) {
+    _origNavigate && _origNavigate(page, el);
+    if (page === 'clients') loadClientsDB();
+    if (page === 'dashboard') Promise.all([loadClientsDB(), loadScheduleDB()]);
+  };
+
+  // ── Init ─────────────────────────────────────
+  wireAddClient();
+  wireAddClass();
+  wireAddPayment();
+  await Promise.all([loadClientsDB(), loadScheduleDB()]);
+})();
+</script>
+</body>
+</html>
