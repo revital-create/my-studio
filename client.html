@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Studio – Client App</title>
+<style>
+  :root {
+    --purple:       #6B46C1;
+    --purple-dark:  #553C9A;
+    --purple-light: #EDE9F8;
+    --purple-mid:   #9F7AEA;
+    --green:        #38A169;
+    --red:          #E53E3E;
+    --orange:       #DD6B20;
+    --blue:         #3182CE;
+    --bg:           #F7F5FF;
+    --white:        #FFFFFF;
+    --text:         #1A1A2E;
+    --muted:        #718096;
+    --border:       #E2D9F3;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: #C4B5E8; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Segoe UI', Arial, sans-serif; padding: 20px;
+  }
+
+  /* ── PHONE FRAME ── */
+  .phone-wrap { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .phone-label { text-align: center; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.8); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .phone {
+    width: 375px; height: 780px; background: var(--white);
+    border-radius: 44px; overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.35), 0 0 0 10px #1a1a2e, 0 0 0 12px #333;
+    position: relative;
+  }
+
+  /* RTL support */
+  .phone.rtl { direction: rtl; font-family: 'Arial', 'Segoe UI', sans-serif; }
+  .phone.rtl .bnav-dot { right: auto; left: 22px; }
+  .phone.rtl .notif-dot { right: auto; left: 4px; }
+  .phone.rtl .booking-item.upcoming { border-left: none; border-right: 4px solid var(--purple); }
+  .phone.rtl .booking-item.past     { border-left: none; border-right: 4px solid var(--border); }
+  .phone.rtl .booking-item.cancelled{ border-left: none; border-right: 4px solid var(--red); }
+  .phone.rtl .chevron { transform: scaleX(-1); }
+  .phone.rtl .renew-arrow { transform: scaleX(-1); }
+  .phone.rtl .card-link { direction: ltr; }
+  .phone.rtl .sheet-row { flex-direction: row-reverse; }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    background: var(--purple-dark); padding: 10px 16px 6px;
+    display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+  }
+  .status-bar .time { color: #fff; font-size: 13px; font-weight: 700; }
+  .status-bar .status-right { display: flex; align-items: center; gap: 8px; }
+  .status-bar .icons { color: #fff; font-size: 12px; display: flex; gap: 6px; align-items: center; }
+
+  /* ── LANGUAGE TOGGLE ── */
+  .lang-toggle {
+    display: flex; background: rgba(255,255,255,0.15); border-radius: 20px;
+    padding: 2px; gap: 1px; flex-shrink: 0;
+  }
+  .lang-btn {
+    padding: 3px 9px; border-radius: 16px; font-size: 11px; font-weight: 700;
+    cursor: pointer; color: rgba(255,255,255,0.65); transition: 0.15s; border: none;
+    background: transparent; font-family: inherit;
+  }
+  .lang-btn.active { background: rgba(255,255,255,0.9); color: var(--purple-dark); }
+
+  /* ── SCREENS ── */
+  .screens { flex: 1; overflow: hidden; position: relative; background: var(--bg); }
+  .screen { display: none; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .screen::-webkit-scrollbar { display: none; }
+  .screen.active { display: block; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav { background: var(--white); border-top: 1px solid var(--border); display: flex; flex-shrink: 0; padding-bottom: 8px; }
+  .bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px 4px; cursor: pointer; transition: 0.15s; position: relative; }
+  .bnav-icon  { font-size: 20px; }
+  .bnav-label { font-size: 10px; font-weight: 600; color: var(--muted); margin-top: 3px; }
+  .bnav-item.active .bnav-label { color: var(--purple); }
+  .bnav-dot { position: absolute; top: 6px; right: 22px; width: 8px; height: 8px; background: var(--red); border-radius: 50%; border: 1.5px solid #fff; }
+
+  /* ── APP HEADER ── */
+  .app-header { background: linear-gradient(135deg, var(--purple-dark) 0%, var(--purple) 100%); padding: 16px 18px 20px; color: #fff; flex-shrink: 0; }
+  .app-header-row { display: flex; justify-content: space-between; align-items: center; }
+  .app-header h2 { font-size: 20px; font-weight: 800; margin-top: 10px; }
+  .app-header p  { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+  .notif-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; position: relative; }
+  .notif-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: var(--red); border-radius: 50%; border: 1.5px solid var(--purple); }
+
+  /* ── CARDS ── */
+  .screen-content { padding: 14px 16px 16px; }
+  .card { background: var(--white); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(107,70,193,0.07); border: 1px solid var(--border); }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .card-link  { font-size: 12px; color: var(--purple); font-weight: 600; cursor: pointer; }
+
+  /* ── MEMBERSHIP CARD ── */
+  .membership-hero { background: linear-gradient(135deg, var(--purple-dark), var(--purple-mid)); border-radius: 16px; padding: 18px 20px; color: #fff; margin-bottom: 14px; position: relative; overflow: hidden; cursor: pointer; }
+  .membership-hero::after { content: '🧘'; position: absolute; right: 16px; bottom: 10px; font-size: 52px; opacity: 0.15; }
+  .phone.rtl .membership-hero::after { right: auto; left: 16px; }
+  .membership-hero .plan-name   { font-size: 12px; font-weight: 600; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.8px; }
+  .membership-hero .plan-type   { font-size: 22px; font-weight: 800; margin: 4px 0; }
+  .membership-hero .plan-detail { font-size: 12px; opacity: 0.8; }
+  .membership-hero .plan-expiry { margin-top: 14px; font-size: 12px; opacity: 0.75; }
+  .prog-bar  { background: rgba(255,255,255,0.25); border-radius: 4px; height: 6px; margin-top: 8px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; background: rgba(255,255,255,0.9); }
+
+  /* ── STATS ROW ── */
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat-mini { background: var(--white); border-radius: 12px; padding: 12px 10px; text-align: center; border: 1px solid var(--border); box-shadow: 0 1px 6px rgba(107,70,193,0.05); }
+  .stat-mini-val   { font-size: 22px; font-weight: 800; color: var(--purple); }
+  .stat-mini-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+
+  /* ── CLASS LIST ── */
+  .class-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; cursor: pointer; }
+  .class-row:last-child { border-bottom: none; }
+  .class-time-badge { background: var(--purple-light); color: var(--purple); border-radius: 10px; padding: 6px 10px; text-align: center; flex-shrink: 0; min-width: 54px; }
+  .class-time-badge .time { font-size: 13px; font-weight: 800; direction: ltr; }
+  .class-time-badge .dur  { font-size: 10px; opacity: 0.7; }
+  .class-info { flex: 1; min-width: 0; }
+  .class-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .class-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .book-btn { background: var(--purple); color: #fff; border: none; border-radius: 20px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; transition: 0.15s; }
+  .book-btn.booked { background: #C6F6D5; color: #22543D; }
+  .book-btn.full   { background: #EDF2F7; color: var(--muted); cursor: default; }
+
+  /* ── DAY PILLS ── */
+  .day-pills { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 10px; scrollbar-width: none; margin-bottom: 2px; }
+  .day-pills::-webkit-scrollbar { display: none; }
+  .day-pill { display: flex; flex-direction: column; align-items: center; min-width: 44px; padding: 6px 10px; border-radius: 12px; cursor: pointer; background: var(--white); border: 1.5px solid var(--border); transition: 0.15s; flex-shrink: 0; }
+  .day-pill.active { background: var(--purple); border-color: var(--purple); }
+  .day-pill.active .dp-day, .day-pill.active .dp-num { color: #fff; }
+  .dp-day { font-size: 10px; font-weight: 600; color: var(--muted); }
+  .dp-num { font-size: 16px; font-weight: 800; color: var(--text); direction: ltr; }
+  .dp-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--purple-mid); margin-top: 3px; }
+  .day-pill.active .dp-dot { background: rgba(255,255,255,0.6); }
+
+  /* ── BOOKINGS ── */
+  .booking-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; }
+  .booking-item.upcoming { border-left: 4px solid var(--purple); }
+  .booking-item.past     { border-left: 4px solid var(--border); opacity: 0.75; }
+  .booking-item.cancelled{ border-left: 4px solid var(--red); opacity: 0.6; }
+  .booking-dot  { width: 42px; height: 42px; border-radius: 12px; background: var(--purple-light); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .booking-info { flex: 1; }
+  .booking-name { font-size: 14px; font-weight: 700; }
+  .booking-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ── BADGES ── */
+  .badge        { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-green  { background: #C6F6D5; color: #276749; }
+  .badge-purple { background: var(--purple-light); color: var(--purple); }
+  .badge-grey   { background: #EDF2F7; color: #4A5568; }
+  .badge-red    { background: #FED7D7; color: #9B2C2C; }
+  .badge-orange { background: #FEEBC8; color: #9C4221; }
+
+  .section-head { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin: 14px 0 8px; }
+
+  /* ── PROFILE ── */
+  .profile-hero { background: linear-gradient(135deg, var(--purple-dark), var(--purple)); padding: 24px 18px 22px; color: #fff; text-align: center; }
+  .profile-avatar { width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; margin: 0 auto 10px; border: 3px solid rgba(255,255,255,0.5); }
+  .profile-name { font-size: 20px; font-weight: 800; }
+  .profile-sub  { font-size: 13px; opacity: 0.75; margin-top: 3px; }
+  .profile-row  { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row-left { display: flex; align-items: center; gap: 12px; }
+  .profile-row-icon { font-size: 18px; width: 28px; text-align: center; }
+  .profile-row-text { font-size: 14px; font-weight: 600; }
+  .profile-row-sub  { font-size: 12px; color: var(--muted); }
+  .chevron { color: var(--muted); font-size: 14px; }
+
+  /* ── NOTIFICATIONS ── */
+  .notif-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .notif-icon.purple { background: var(--purple-light); }
+  .notif-icon.green  { background: #C6F6D5; }
+  .notif-icon.orange { background: #FEEBC8; }
+  .notif-text  { font-size: 13.5px; flex: 1; line-height: 1.4; }
+  .notif-time  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .notif-item.unread .notif-text { color: var(--text); }
+  .notif-item:not(.unread) .notif-text { color: var(--muted); }
+  .unread-dot  { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); flex-shrink: 0; margin-top: 6px; }
+
+  /* ── SHEET / MODAL ── */
+  .sheet-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: flex-end; }
+  .sheet-overlay.open { display: flex; }
+  .sheet { background: var(--white); border-radius: 20px 20px 0 0; width: 100%; padding: 20px 18px 30px; animation: slideUp 0.25s ease; max-height: 88%; overflow-y: auto; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+  .sheet h3 { font-size: 17px; font-weight: 800; margin-bottom: 14px; }
+  .sheet-class-header { display: flex; gap: 14px; align-items: center; padding: 14px; background: var(--purple-light); border-radius: 12px; margin-bottom: 16px; }
+  .sheet-class-icon { font-size: 28px; }
+  .sheet-class-name { font-size: 16px; font-weight: 800; }
+  .sheet-class-meta { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .sheet-row { display: flex; justify-content: space-between; font-size: 13.5px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .sheet-row:last-of-type { border-bottom: none; }
+  .sheet-row-label { color: var(--muted); font-weight: 500; }
+  .sheet-row-val   { font-weight: 700; color: var(--text); }
+  .btn-full { width: 100%; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; margin-top: 12px; transition: 0.15s; font-family: inherit; }
+  .btn-full:active { transform: scale(0.98); }
+  .btn-purple { background: var(--purple); color: #fff; }
+  .btn-outline { background: var(--purple-light); color: var(--purple); }
+  .btn-red    { background: #FED7D7; color: var(--red); margin-top: 8px; }
+
+  /* ── RENEW BANNER ── */
+  .renew-banner { background: linear-gradient(135deg, #F6AD55, #DD6B20); border-radius: 12px; padding: 14px 16px; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .renew-banner-icon { font-size: 24px; }
+  .renew-banner-text { flex: 1; font-size: 13.5px; font-weight: 600; }
+  .renew-banner-sub  { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  .renew-arrow { font-size: 18px; }
+
+  /* ── TAB SWITCH ── */
+  .tab-switch { display: flex; background: var(--purple-light); border-radius: 10px; padding: 3px; margin-bottom: 14px; }
+  .tab-switch-btn { flex: 1; padding: 7px; text-align: center; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; color: var(--muted); transition: 0.15s; }
+  .tab-switch-btn.active { background: var(--white); color: var(--purple); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+  /* ── TOAST ── */
+  .toast { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; z-index: 200; white-space: nowrap; animation: toastIn 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+  @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+  /* ══════════════════════════════════════════
+     ONBOARDING OVERLAY
+  ══════════════════════════════════════════ */
+  .onboarding-overlay {
+    position: absolute; inset: 0; z-index: 300;
+    background: var(--bg); display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .onboarding-overlay.hidden { display: none; }
+
+  /* Progress bar at top */
+  .ob-progress-bar {
+    height: 4px; background: var(--border); flex-shrink: 0;
+  }
+  .ob-progress-fill {
+    height: 100%; background: var(--purple);
+    border-radius: 0 2px 2px 0;
+    transition: width 0.4s ease;
+  }
+
+  /* Step counter */
+  .ob-step-label {
+    text-align: center; font-size: 11px; font-weight: 700;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px;
+    padding: 10px 0 2px; flex-shrink: 0;
+  }
+
+  /* Individual steps */
+  .ob-step { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .ob-step.active { display: flex; }
+
+  /* Welcome step */
+  .ob-welcome {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 28px 28px 20px; text-align: center;
+  }
+  .ob-welcome-logo { font-size: 64px; margin-bottom: 16px; }
+  .ob-welcome h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .ob-welcome p  { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+  .ob-steps-list {
+    width: 100%; background: var(--white); border-radius: 14px;
+    border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px;
+  }
+  .ob-steps-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 16px; border-bottom: 1px solid var(--border);
+  }
+  .ob-steps-row:last-child { border-bottom: none; }
+  .ob-steps-icon { font-size: 20px; width: 32px; text-align: center; flex-shrink: 0; }
+  .ob-steps-text { font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .ob-steps-sub  { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .ob-steps-check { margin-left: auto; color: var(--muted); font-size: 14px; }
+
+  /* Doc step (health + waiver) */
+  .ob-doc-header {
+    background: linear-gradient(135deg, var(--purple-dark), var(--purple));
+    padding: 14px 18px; color: #fff; flex-shrink: 0;
+  }
+  .ob-doc-header h2  { font-size: 16px; font-weight: 800; }
+  .ob-doc-header p   { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+  .ob-doc-body {
+    flex: 1; overflow-y: auto; padding: 16px 18px;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  .ob-doc-body::-webkit-scrollbar { width: 4px; }
+  .ob-doc-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Placeholder document block */
+  .ob-placeholder-doc {
+    background: var(--white); border: 1.5px dashed var(--purple-mid);
+    border-radius: 12px; padding: 16px; margin-bottom: 16px;
+  }
+  .ob-placeholder-badge {
+    display: inline-block; background: var(--purple-light); color: var(--purple);
+    font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+  }
+  .ob-placeholder-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .ob-placeholder-text  { font-size: 12.5px; color: var(--muted); line-height: 1.7; }
+  .ob-placeholder-note  {
+    display: flex; gap: 8px; align-items: flex-start; margin-top: 12px;
+    background: #FEEBC8; border-radius: 8px; padding: 10px 12px;
+    font-size: 12px; color: #7B341E;
+  }
+
+  /* Checkbox items */
+  .ob-check-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 11px 0; border-bottom: 1px solid var(--border);
+  }
+  .ob-check-item:last-child { border-bottom: none; }
+  .ob-checkbox {
+    width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border);
+    flex-shrink: 0; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; font-size: 14px; transition: 0.15s; margin-top: 1px;
+    background: var(--white);
+  }
+  .ob-checkbox.checked { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .ob-check-text { font-size: 13px; color: var(--text); line-height: 1.5; flex: 1; }
+  .ob-check-required { color: var(--red); font-size: 11px; font-weight: 600; }
+
+  /* Signature field */
+  .ob-sig-section {
+    background: var(--white); border-radius: 12px; border: 1.5px solid var(--border);
+    padding: 14px; margin-top: 4px;
+  }
+  .ob-sig-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
+  .ob-sig-input {
+    width: 100%; border: none; border-bottom: 2px solid var(--border);
+    padding: 6px 2px; font-size: 18px; font-family: 'Georgia', serif;
+    color: var(--purple); outline: none; background: transparent;
+    font-style: italic;
+  }
+  .ob-sig-input:focus { border-bottom-color: var(--purple); }
+  .ob-sig-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .ob-sig-date { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  /* Bottom action bar */
+  .ob-footer {
+    padding: 12px 18px 20px; background: var(--white);
+    border-top: 1px solid var(--border); flex-shrink: 0;
+  }
+  .ob-error { font-size: 12px; color: var(--red); font-weight: 600; text-align: center; margin-bottom: 8px; min-height: 18px; }
+  .ob-btn {
+    width: 100%; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700;
+    cursor: pointer; border: none; background: var(--purple); color: #fff;
+    font-family: inherit; transition: 0.15s;
+  }
+  .ob-btn:active { transform: scale(0.98); }
+  .ob-btn:disabled { background: var(--border); color: var(--muted); cursor: default; }
+
+  /* Complete step */
+  .ob-complete {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 28px; text-align: center;
+  }
+  .ob-complete-anim { font-size: 72px; margin-bottom: 16px; animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275); }
+  @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .ob-complete h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .ob-complete p  { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+  .ob-complete-signed { background: var(--white); border-radius: 12px; border: 1px solid var(--border); padding: 14px 16px; width: 100%; margin-bottom: 20px; }
+  .ob-complete-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; }
+  .ob-complete-row span:first-child { color: var(--muted); }
+  .ob-complete-row span:last-child  { font-weight: 700; color: var(--green); }
+
+  /* Demo reset button (outside phone) */
+  .demo-reset {
+    text-align: center; margin-top: 12px;
+  }
+  .demo-reset button {
+    background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.85);
+    border: 1.5px solid rgba(255,255,255,0.35); border-radius: 20px;
+    padding: 8px 20px; font-size: 12px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: 0.15s;
+  }
+  .demo-reset button:hover { background: rgba(255,255,255,0.28); color: #fff; }
+</style>
+</head>
+<body>
+<div class="phone-wrap">
+<div>
+  <div class="phone-label" id="phone-label">Client App · Member View</div>
+  <div class="phone" id="phone">
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <div class="status-right">
+        <span class="icons">📶 🔋</span>
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+          <button class="lang-btn"        id="btn-he" onclick="setLang('he')">עב</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ SCREENS ═══════════════════ -->
+    <div class="screens">
+
+      <!-- HOME -->
+      <div class="screen active" id="screen-home">
+        <div class="app-header">
+          <div class="app-header-row">
+            <div style="font-size:13px;opacity:0.8" data-i18n="greeting">Good morning 👋</div>
+            <div class="notif-btn" onclick="goTo('notifications')">🔔<div class="notif-dot"></div></div>
+          </div>
+          <h2 data-i18n="hi_name">Hi, Shira!</h2>
+          <p data-i18n="ready">Ready for your next class?</p>
+        </div>
+        <div class="screen-content">
+
+          <!-- Membership hero -->
+          <div class="membership-hero" onclick="goTo('profile')">
+            <div class="plan-name" data-i18n="your_membership">Your Membership</div>
+            <div class="plan-type" data-i18n="plan_monthly">Monthly Unlimited</div>
+            <div class="plan-detail" data-i18n="plan_detail">🧘 All classes included</div>
+            <div class="prog-bar"><div class="prog-fill" style="width:77%"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px">
+              <div class="plan-expiry" data-i18n="expires_date">Expires March 31, 2026</div>
+              <div style="font-size:12px;opacity:0.8" data-i18n="days_left">8 days left</div>
+            </div>
+          </div>
+
+          <!-- Renewal banner -->
+          <div class="renew-banner" onclick="showSheet('sheet-renew')">
+            <div class="renew-banner-icon">⚠️</div>
+            <div>
+              <div class="renew-banner-text" data-i18n="renew_title">Your membership expires in 8 days</div>
+              <div class="renew-banner-sub"  data-i18n="renew_sub">Tap to renew now and keep your streak!</div>
+            </div>
+            <div class="renew-arrow">›</div>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-row">
+            <div class="stat-mini"><div class="stat-mini-val">48</div><div class="stat-mini-label" data-i18n="stat_classes">Classes</div></div>
+            <div class="stat-mini"><div class="stat-mini-val">∞</div><div class="stat-mini-label"  data-i18n="stat_sessions">Sessions</div></div>
+            <div class="stat-mini"><div class="stat-mini-val">🔥6</div><div class="stat-mini-label" data-i18n="stat_streak">Streak</div></div>
+          </div>
+
+          <!-- Next class -->
+          <div class="card">
+            <div class="card-title">
+              <span data-i18n="next_class">Next Class</span>
+              <span class="card-link" onclick="goTo('schedule')" data-i18n="see_all">See all →</span>
+            </div>
+            <div class="class-row" onclick="showSheet('sheet-class-booked')">
+              <div class="class-time-badge"><div class="time">11:00</div><div class="dur" data-i18n="min60">60 min</div></div>
+              <div class="class-info">
+                <div class="class-name" data-i18n="class_pilates_core">Pilates Core</div>
+                <div class="class-meta" data-i18n="today_dana">Today · Dana · Studio A</div>
+              </div>
+              <span class="badge badge-purple" data-i18n="booked_check">Booked ✓</span>
+            </div>
+          </div>
+
+          <!-- This week -->
+          <div class="card">
+            <div class="card-title" data-i18n="this_week">This Week</div>
+            <div class="class-row" onclick="showSheet('sheet-class-booked')">
+              <div class="class-time-badge"><div class="time">09:00</div><div class="dur" data-i18n="min60">60 min</div></div>
+              <div class="class-info">
+                <div class="class-name" data-i18n="class_morning_yoga">Morning Yoga Flow</div>
+                <div class="class-meta" data-i18n="wed_maya">Wed, Mar 25 · Maya</div>
+              </div>
+              <span class="badge badge-green" data-i18n="booked_check">Booked ✓</span>
+            </div>
+            <div class="class-row" onclick="showSheet('sheet-class-open')">
+              <div class="class-time-badge" style="background:#FEEBC8;color:#9C4221"><div class="time">19:30</div><div class="dur" data-i18n="min60">60 min</div></div>
+              <div class="class-info">
+                <div class="class-name" data-i18n="class_yin_yoga">Yin Yoga</div>
+                <div class="class-meta" data-i18n="wed_noa_spots">Wed, Mar 25 · Noa · 5 spots left</div>
+              </div>
+              <button class="book-btn" onclick="event.stopPropagation();bookClass(this)" data-i18n="book_btn">Book</button>
+            </div>
+            <div class="class-row" onclick="showSheet('sheet-class-open')">
+              <div class="class-time-badge"><div class="time">18:00</div><div class="dur" data-i18n="min75">75 min</div></div>
+              <div class="class-info">
+                <div class="class-name" data-i18n="class_vinyasa">Vinyasa Flow</div>
+                <div class="class-meta" data-i18n="thu_maya_spots">Thu, Mar 26 · Maya · 7 spots left</div>
+              </div>
+              <button class="book-btn" onclick="event.stopPropagation();bookClass(this)" data-i18n="book_btn">Book</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCHEDULE -->
+      <div class="screen" id="screen-schedule">
+        <div class="app-header">
+          <div class="app-header-row">
+            <div style="font-size:16px;font-weight:800" data-i18n="nav_schedule">Class Schedule</div>
+            <div style="font-size:13px;opacity:0.75" data-i18n="march_2026">March 2026</div>
+          </div>
+        </div>
+        <div class="screen-content">
+          <div class="day-pills" id="day-pills-container">
+            <div class="day-pill" onclick="selectDay(this,0)"><div class="dp-day" data-i18n="day_mon">MON</div><div class="dp-num">23</div><div class="dp-dot"></div></div>
+            <div class="day-pill active" onclick="selectDay(this,1)"><div class="dp-day" data-i18n="day_tue">TUE</div><div class="dp-num">24</div></div>
+            <div class="day-pill" onclick="selectDay(this,2)"><div class="dp-day" data-i18n="day_wed">WED</div><div class="dp-num">25</div><div class="dp-dot"></div></div>
+            <div class="day-pill" onclick="selectDay(this,3)"><div class="dp-day" data-i18n="day_thu">THU</div><div class="dp-num">26</div><div class="dp-dot"></div></div>
+            <div class="day-pill" onclick="selectDay(this,4)"><div class="dp-day" data-i18n="day_fri">FRI</div><div class="dp-num">27</div><div class="dp-dot"></div></div>
+            <div class="day-pill" onclick="selectDay(this,5)"><div class="dp-day" data-i18n="day_sat">SAT</div><div class="dp-num">28</div></div>
+            <div class="day-pill" onclick="selectDay(this,6)"><div class="dp-day" data-i18n="day_sun">SUN</div><div class="dp-num">29</div></div>
+          </div>
+          <div id="schedule-classes"></div>
+          <div style="text-align:center;padding:14px 0;font-size:13px;color:var(--muted)">
+            🟢 <span data-i18n="legend_open">Open</span> &nbsp;·&nbsp; 🟡 <span data-i18n="legend_almost">Almost Full</span> &nbsp;·&nbsp; 🔴 <span data-i18n="legend_full">Full</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKINGS -->
+      <div class="screen" id="screen-bookings">
+        <div class="app-header">
+          <div class="app-header-row">
+            <div style="font-size:16px;font-weight:800" data-i18n="nav_bookings">My Bookings</div>
+          </div>
+        </div>
+        <div class="screen-content">
+          <div class="tab-switch">
+            <div class="tab-switch-btn active" onclick="switchBookingTab(this,'upcoming')" data-i18n="tab_upcoming">Upcoming</div>
+            <div class="tab-switch-btn"        onclick="switchBookingTab(this,'history')"  data-i18n="tab_history">History</div>
+          </div>
+          <div id="bookings-upcoming">
+            <div class="section-head" data-i18n="today_date">Today — Monday Mar 23</div>
+            <div class="booking-item upcoming" onclick="showSheet('sheet-class-booked')">
+              <div class="booking-dot">🧘</div>
+              <div class="booking-info">
+                <div class="booking-name" data-i18n="class_pilates_core">Pilates Core</div>
+                <div class="booking-meta" data-i18n="pilates_meta">11:00 – 12:00 · Dana · Studio A</div>
+              </div>
+              <span class="badge badge-purple" data-i18n="today_badge">Today</span>
+            </div>
+            <div class="section-head" data-i18n="wed_date">Wednesday Mar 25</div>
+            <div class="booking-item upcoming" onclick="showSheet('sheet-class-booked')">
+              <div class="booking-dot">🌅</div>
+              <div class="booking-info">
+                <div class="booking-name" data-i18n="class_morning_yoga">Morning Yoga Flow</div>
+                <div class="booking-meta" data-i18n="yoga_meta">09:00 – 10:00 · Maya · Studio A</div>
+              </div>
+              <span class="badge badge-green">✓</span>
+            </div>
+            <div class="section-head" data-i18n="thu_date">Thursday Mar 26</div>
+            <div class="booking-item upcoming" onclick="showSheet('sheet-class-booked')">
+              <div class="booking-dot">🌊</div>
+              <div class="booking-info">
+                <div class="booking-name" data-i18n="class_vinyasa">Vinyasa Flow</div>
+                <div class="booking-meta" data-i18n="vinyasa_meta">18:00 – 19:15 · Maya · Studio A</div>
+              </div>
+              <span class="badge badge-green">✓</span>
+            </div>
+          </div>
+          <div id="bookings-history" style="display:none">
+            <div class="section-head" data-i18n="this_month">This Month</div>
+            <div class="booking-item past"><div class="booking-dot" style="background:#EDF2F7">🧘</div><div class="booking-info"><div class="booking-name" data-i18n="class_yin_yoga">Yin Yoga</div><div class="booking-meta">Mar 21 · 19:30 · Noa</div></div><span class="badge badge-green" data-i18n="attended">Attended</span></div>
+            <div class="booking-item past"><div class="booking-dot" style="background:#EDF2F7">🌅</div><div class="booking-info"><div class="booking-name" data-i18n="class_morning_yoga">Morning Yoga Flow</div><div class="booking-meta">Mar 18 · 09:00 · Maya</div></div><span class="badge badge-green" data-i18n="attended">Attended</span></div>
+            <div class="booking-item cancelled"><div class="booking-dot" style="background:#FED7D7">🌊</div><div class="booking-info"><div class="booking-name" data-i18n="class_vinyasa">Vinyasa Flow</div><div class="booking-meta">Mar 11 · 18:00 · Maya</div></div><span class="badge badge-red" data-i18n="cancelled">Cancelled</span></div>
+            <div class="booking-item past"><div class="booking-dot" style="background:#EDF2F7">💪</div><div class="booking-info"><div class="booking-name" data-i18n="class_pilates_core">Pilates Core</div><div class="booking-meta">Mar 14 · 11:00 · Dana</div></div><span class="badge badge-green" data-i18n="attended">Attended</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="screen" id="screen-notifications">
+        <div class="app-header">
+          <div class="app-header-row">
+            <div style="font-size:16px;font-weight:800" data-i18n="nav_alerts">Notifications</div>
+            <div style="font-size:12px;opacity:0.75;cursor:pointer" onclick="showToast(T('all_read_toast'))" data-i18n="mark_read">Mark all read</div>
+          </div>
+        </div>
+        <div class="screen-content">
+          <div class="section-head" data-i18n="notif_new">New</div>
+          <div class="notif-item unread">
+            <div class="notif-icon purple">📅</div>
+            <div style="flex:1"><div class="notif-text" data-i18n="notif1">Reminder: Pilates Core starts in 2 hours at 11:00 · Studio A</div><div class="notif-time" data-i18n="today_9am">Today, 9:00 AM</div></div>
+            <div class="unread-dot"></div>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-icon orange">⚠️</div>
+            <div style="flex:1"><div class="notif-text" data-i18n="notif2">Membership expiring soon! Your Monthly Unlimited expires in 8 days.</div><div class="notif-time" data-i18n="today_8am">Today, 8:00 AM</div></div>
+            <div class="unread-dot"></div>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-icon green">✅</div>
+            <div style="flex:1"><div class="notif-text" data-i18n="notif3">Booking confirmed! Morning Yoga Flow on Wed Mar 25 at 09:00.</div><div class="notif-time" data-i18n="yesterday_345">Yesterday, 3:45 PM</div></div>
+            <div class="unread-dot"></div>
+          </div>
+          <div class="section-head" style="margin-top:14px" data-i18n="notif_earlier">Earlier</div>
+          <div class="notif-item"><div class="notif-icon purple">🎉</div><div><div class="notif-text" data-i18n="notif4">New class added: Restorative Yoga on Friday Mar 27 at 10:00.</div><div class="notif-time">Mar 22, 11:00 AM</div></div></div>
+          <div class="notif-item"><div class="notif-icon green">💳</div><div><div class="notif-text" data-i18n="notif5">Payment confirmed — ₪390 for Monthly Unlimited. Invoice sent.</div><div class="notif-time">Mar 1, 12:00 PM</div></div></div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="screen" id="screen-profile">
+        <div class="profile-hero">
+          <div class="profile-avatar">S</div>
+          <div class="profile-name" data-i18n="client_name">Shira Cohen</div>
+          <div class="profile-sub" data-i18n="member_since">Member since January 2025 · 48 classes</div>
+        </div>
+        <div class="screen-content">
+          <div class="card">
+            <div class="card-title" data-i18n="my_membership">💳 My Membership</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0">
+              <div>
+                <div style="font-size:15px;font-weight:800;color:var(--purple)" data-i18n="plan_monthly">Monthly Unlimited</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:2px" data-i18n="auto_renews">Auto-renews April 1, 2026</div>
+              </div>
+              <span class="badge badge-green" data-i18n="active_badge">Active</span>
+            </div>
+            <div style="height:1px;background:var(--border);margin:10px 0"></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+              <span style="color:var(--muted)" data-i18n="price_label">Price</span>
+              <span style="font-weight:700" data-i18n="price_value">₪390 / month</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px">
+              <span style="color:var(--muted)" data-i18n="next_charge">Next charge</span>
+              <span style="font-weight:700" data-i18n="next_charge_date">April 1, 2026</span>
+            </div>
+            <button class="btn-full btn-outline" style="margin-top:12px;padding:10px" onclick="showToast(T('contact_studio_toast'))" data-i18n="manage_membership">Manage Membership</button>
+          </div>
+          <div class="card" style="padding:6px 16px">
+            <div class="profile-row" onclick="showSheet('sheet-personal')">
+              <div class="profile-row-left"><div class="profile-row-icon">👤</div><div><div class="profile-row-text" data-i18n="personal_info">Personal Info</div><div class="profile-row-sub" data-i18n="personal_sub">Name, phone, email</div></div></div>
+              <div class="chevron">›</div>
+            </div>
+            <div class="profile-row" onclick="showSheet('sheet-health')">
+              <div class="profile-row-left"><div class="profile-row-icon">💊</div><div><div class="profile-row-text" data-i18n="health_form">Health Form</div><div class="profile-row-sub" data-i18n="health_sub">Injuries, experience level</div></div></div>
+              <div class="chevron">›</div>
+            </div>
+            <div class="profile-row" onclick="goTo('payments-screen')">
+              <div class="profile-row-left"><div class="profile-row-icon">🧾</div><div><div class="profile-row-text" data-i18n="payment_history">Payment History</div><div class="profile-row-sub" data-i18n="payment_sub">Invoices &amp; receipts</div></div></div>
+              <div class="chevron">›</div>
+            </div>
+            <div class="profile-row" onclick="showToast(T('notif_settings_toast'))">
+              <div class="profile-row-left"><div class="profile-row-icon">🔔</div><div><div class="profile-row-text" data-i18n="notifications_menu">Notifications</div><div class="profile-row-sub" data-i18n="notif_sub">WhatsApp &amp; push settings</div></div></div>
+              <div class="chevron">›</div>
+            </div>
+            <div class="profile-row" onclick="showToast(T('logout_toast'))">
+              <div class="profile-row-left"><div class="profile-row-icon">🚪</div><div><div class="profile-row-text" style="color:var(--red)" data-i18n="logout">Log Out</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAYMENTS HISTORY -->
+      <div class="screen" id="screen-payments-screen">
+        <div class="app-header">
+          <div class="app-header-row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="cursor:pointer;font-size:18px" onclick="goTo('profile')">‹</span>
+              <span style="font-size:16px;font-weight:800" data-i18n="payment_history">Payment History</span>
+            </div>
+          </div>
+        </div>
+        <div class="screen-content">
+          <div class="booking-item upcoming" style="border-left-color:var(--green)"><div class="booking-dot" style="background:#C6F6D5;font-size:16px">💳</div><div class="booking-info"><div class="booking-name" data-i18n="plan_monthly">Monthly Unlimited</div><div class="booking-meta" data-i18n="pay1_meta">Mar 1, 2026 · Auto-renewal · Card</div></div><div style="font-weight:800;color:var(--green)">₪390</div></div>
+          <div class="booking-item past"><div class="booking-dot" style="background:#EDF2F7;font-size:16px">💳</div><div class="booking-info"><div class="booking-name" data-i18n="plan_monthly">Monthly Unlimited</div><div class="booking-meta" data-i18n="pay2_meta">Feb 1, 2026 · Auto-renewal · Card</div></div><div style="font-weight:800;color:var(--green)">₪390</div></div>
+          <div class="booking-item past"><div class="booking-dot" style="background:#EDF2F7;font-size:16px">💳</div><div class="booking-info"><div class="booking-name" data-i18n="plan_monthly">Monthly Unlimited</div><div class="booking-meta" data-i18n="pay3_meta">Jan 1, 2026 · Auto-renewal · Card</div></div><div style="font-weight:800;color:var(--green)">₪390</div></div>
+          <div style="text-align:center;padding:16px;font-size:13px;color:var(--muted)" data-i18n="invoice_note">Invoices are sent via WhatsApp and email after each payment.</div>
+        </div>
+      </div>
+
+    </div><!-- end .screens -->
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <div class="bnav-item active" onclick="goTo('home',this)"><span class="bnav-icon">🏠</span><span class="bnav-label" data-i18n="nav_home">Home</span></div>
+      <div class="bnav-item" onclick="goTo('schedule',this)"><span class="bnav-icon">📅</span><span class="bnav-label" data-i18n="nav_schedule">Schedule</span></div>
+      <div class="bnav-item" onclick="goTo('bookings',this)"><span class="bnav-icon">📋</span><span class="bnav-label" data-i18n="nav_bookings">My Classes</span></div>
+      <div class="bnav-item" onclick="goTo('notifications',this)"><span class="bnav-icon">🔔</span><span class="bnav-label" data-i18n="nav_alerts">Alerts</span><div class="bnav-dot"></div></div>
+      <div class="bnav-item" onclick="goTo('profile',this)"><span class="bnav-icon">👤</span><span class="bnav-label" data-i18n="nav_profile">Profile</span></div>
+    </div>
+
+    <!-- ═══════════════════ SHEETS ═══════════════════ -->
+
+    <!-- Open class sheet -->
+    <div class="sheet-overlay" id="sheet-class-open" onclick="closeSheet('sheet-class-open')">
+      <div class="sheet" onclick="event.stopPropagation()">
+        <div class="sheet-handle"></div>
+        <div class="sheet-class-header"><div class="sheet-class-icon">🌊</div><div><div class="sheet-class-name" data-i18n="class_vinyasa">Vinyasa Flow</div><div class="sheet-class-meta" data-i18n="vinyasa_sheet_meta">Thursday, March 26 · 18:00 – 19:15</div></div></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="instructor_lbl">Instructor</span><span class="sheet-row-val">Maya</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="room_lbl">Room</span><span class="sheet-row-val">Studio A</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="duration_lbl">Duration</span><span class="sheet-row-val" data-i18n="min75">75 minutes</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="spots_lbl">Spots left</span><span class="sheet-row-val" style="color:var(--green)" data-i18n="spots_val">7 / 12 open</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="level_lbl">Level</span><span class="sheet-row-val" data-i18n="level_inter">Intermediate</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="cost_lbl">Cost</span><span class="sheet-row-val" style="color:var(--purple)" data-i18n="included_plan">Included in your plan ✓</span></div>
+        <button class="btn-full btn-purple" onclick="closeSheet('sheet-class-open');bookConfirm()" data-i18n="book_this">Book This Class</button>
+        <button class="btn-full btn-outline" onclick="closeSheet('sheet-class-open')" data-i18n="close_btn">Close</button>
+      </div>
+    </div>
+
+    <!-- Booked class sheet -->
+    <div class="sheet-overlay" id="sheet-class-booked" onclick="closeSheet('sheet-class-booked')">
+      <div class="sheet" onclick="event.stopPropagation()">
+        <div class="sheet-handle"></div>
+        <div class="sheet-class-header" style="background:#C6F6D5"><div class="sheet-class-icon">🧘</div><div><div class="sheet-class-name" data-i18n="class_pilates_core">Pilates Core</div><div class="sheet-class-meta" data-i18n="pilates_sheet_meta">Today, Monday March 23 · 11:00 – 12:00</div></div></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="instructor_lbl">Instructor</span><span class="sheet-row-val">Dana</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="room_lbl">Room</span><span class="sheet-row-val">Studio B</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="duration_lbl">Duration</span><span class="sheet-row-val" data-i18n="min60_full">60 minutes</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="status_lbl">Status</span><span class="sheet-row-val" style="color:var(--green)" data-i18n="registered_status">✅ You're registered</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="reminder_lbl">Reminder</span><span class="sheet-row-val" data-i18n="reminder_sent">WhatsApp sent ✓</span></div>
+        <button class="btn-full btn-purple" onclick="closeSheet('sheet-class-booked');showToast(T('directions_toast'))" data-i18n="directions_btn">Get Directions</button>
+        <button class="btn-full btn-red" onclick="closeSheet('sheet-class-booked');showToast(T('cancel_toast'))" data-i18n="cancel_booking">Cancel Booking</button>
+      </div>
+    </div>
+
+    <!-- Renew sheet -->
+    <div class="sheet-overlay" id="sheet-renew" onclick="closeSheet('sheet-renew')">
+      <div class="sheet" onclick="event.stopPropagation()">
+        <div class="sheet-handle"></div>
+        <h3 data-i18n="renew_heading">Renew Membership 🧘</h3>
+        <div style="background:var(--purple-light);border-radius:12px;padding:14px;margin-bottom:14px;text-align:center">
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600" data-i18n="plan_monthly">Monthly Unlimited</div>
+          <div style="font-size:32px;font-weight:800;color:var(--purple);margin:4px 0">₪390</div>
+          <div style="font-size:12px;color:var(--muted)" data-i18n="renew_desc">per month · All classes · Cancel anytime</div>
+        </div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="current_expiry">Current expiry</span><span class="sheet-row-val" style="color:var(--orange)">March 31, 2026</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="new_expiry">New expiry</span><span class="sheet-row-val" style="color:var(--green)">April 30, 2026</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="payment_method">Payment method</span><span class="sheet-row-val">💳 Visa ···4211</span></div>
+        <button class="btn-full btn-purple" onclick="closeSheet('sheet-renew');showToast(T('renewed_toast'))" data-i18n="confirm_renew">Confirm Renewal — ₪390</button>
+        <button class="btn-full btn-outline" onclick="closeSheet('sheet-renew')" data-i18n="not_now">Not Now</button>
+      </div>
+    </div>
+
+    <!-- Personal info sheet -->
+    <div class="sheet-overlay" id="sheet-personal" onclick="closeSheet('sheet-personal')">
+      <div class="sheet" onclick="event.stopPropagation()">
+        <div class="sheet-handle"></div>
+        <h3 data-i18n="personal_info">Personal Info</h3>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="full_name">Full Name</span><span class="sheet-row-val">Shira Cohen</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="phone_lbl">Phone</span><span class="sheet-row-val" style="direction:ltr">050-123-4567</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="email_lbl">Email</span><span class="sheet-row-val" style="direction:ltr">shira@email.com</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="dob_lbl">Date of Birth</span><span class="sheet-row-val">April 12, 1990</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="member_since_lbl">Member Since</span><span class="sheet-row-val">January 2025</span></div>
+        <button class="btn-full btn-outline" onclick="showToast(T('saved_toast'));closeSheet('sheet-personal')" data-i18n="save_changes">Save Changes</button>
+      </div>
+    </div>
+
+    <!-- Health form sheet -->
+    <div class="sheet-overlay" id="sheet-health" onclick="closeSheet('sheet-health')">
+      <div class="sheet" onclick="event.stopPropagation()">
+        <div class="sheet-handle"></div>
+        <h3 data-i18n="health_form">Health Form</h3>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="exp_level">Experience Level</span><span class="sheet-row-val" data-i18n="intermediate">Intermediate</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="injuries_lbl">Injuries / Conditions</span><span class="sheet-row-val" data-i18n="injuries_val">Mild lower back sensitivity</span></div>
+        <div class="sheet-row"><span class="sheet-row-label" data-i18n="emergency_lbl">Emergency Contact</span><span class="sheet-row-val" style="direction:ltr">Dan Cohen · 052-999-0000</span></div>
+        <button class="btn-full btn-outline" onclick="showToast(T('saved_toast'));closeSheet('sheet-health')" data-i18n="update_form">Update Form</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         ONBOARDING OVERLAY (first-time sign-up only)
+         ═══════════════════════════════════════════ -->
+    <div class="onboarding-overlay" id="onboarding">
+
+      <!-- Progress bar -->
+      <div class="ob-progress-bar"><div class="ob-progress-fill" id="ob-progress" style="width:25%"></div></div>
+      <div class="ob-step-label" id="ob-step-label">Step 1 of 3</div>
+
+      <!-- ── STEP 1: WELCOME ── -->
+      <div class="ob-step active" id="ob-step-1">
+        <div class="ob-welcome">
+          <div class="ob-welcome-logo">🧘</div>
+          <h1 id="ob-welcome-title">Welcome, Shira!</h1>
+          <p id="ob-welcome-desc">Before you book your first class, we need just a few minutes to complete your registration. This only happens once.</p>
+          <div class="ob-steps-list">
+            <div class="ob-steps-row">
+              <div class="ob-steps-icon">💊</div>
+              <div><div class="ob-steps-text" id="ob-list-health">Health Declaration</div><div class="ob-steps-sub" id="ob-list-health-sub">Medical background & conditions</div></div>
+              <div class="ob-steps-check">○</div>
+            </div>
+            <div class="ob-steps-row">
+              <div class="ob-steps-icon">📋</div>
+              <div><div class="ob-steps-text" id="ob-list-waiver">Liability Waiver</div><div class="ob-steps-sub" id="ob-list-waiver-sub">Studio terms & release of liability</div></div>
+              <div class="ob-steps-check">○</div>
+            </div>
+          </div>
+        </div>
+        <div class="ob-footer">
+          <div class="ob-error"></div>
+          <button class="ob-btn" id="ob-welcome-btn" onclick="goToObStep(2)">Get Started →</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: HEALTH DECLARATION ── -->
+      <div class="ob-step" id="ob-step-2">
+        <div class="ob-doc-header">
+          <h2 id="ob-health-title">💊 Health Declaration</h2>
+          <p id="ob-health-sub">Please read carefully and confirm each item</p>
+        </div>
+        <div class="ob-doc-body">
+
+          <!-- Placeholder document block -->
+          <div class="ob-placeholder-doc">
+            <div class="ob-placeholder-badge" id="ob-placeholder-badge">📄 Document Placeholder</div>
+            <div class="ob-placeholder-title" id="ob-health-doc-title">Health Declaration Form</div>
+            <div class="ob-placeholder-text" id="ob-health-doc-body">
+              Your health declaration document content will appear here. You can upload the full text of your declaration form — including any specific medical questions, conditions checklist, or studio-specific health policies — and it will replace this placeholder.
+            </div>
+            <div class="ob-placeholder-note">
+              ⚙️ <span id="ob-placeholder-note-text">You'll upload the full document content in the next step of building your app.</span>
+            </div>
+          </div>
+
+          <!-- Acknowledgement checkboxes -->
+          <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:6px 14px;margin-bottom:14px">
+            <div class="ob-check-item">
+              <div class="ob-checkbox" id="hc1" onclick="toggleCheck('hc1','hc-btn')">✓</div>
+              <div class="ob-check-text"><span id="ob-hc1">I confirm that I am in good physical health and have no medical conditions that would prevent me from participating in yoga or Pilates classes.</span> <span class="ob-check-required">*</span></div>
+            </div>
+            <div class="ob-check-item">
+              <div class="ob-checkbox" id="hc2" onclick="toggleCheck('hc2','hc-btn')">✓</div>
+              <div class="ob-check-text"><span id="ob-hc2">I have disclosed any injuries, chronic conditions, or physical limitations that the studio should be aware of.</span> <span class="ob-check-required">*</span></div>
+            </div>
+            <div class="ob-check-item">
+              <div class="ob-checkbox" id="hc3" onclick="toggleCheck('hc3','hc-btn')">✓</div>
+              <div class="ob-check-text"><span id="ob-hc3">I agree to inform my instructor before each class of any changes to my physical condition.</span> <span class="ob-check-required">*</span></div>
+            </div>
+          </div>
+
+          <!-- Signature -->
+          <div class="ob-sig-section">
+            <div class="ob-sig-label" id="ob-sig-label-health">Full Name (acts as signature)</div>
+            <input class="ob-sig-input" id="health-sig" placeholder="Shira Cohen" oninput="checkSig('health-sig','hc-btn')"/>
+            <div class="ob-sig-note" id="ob-sig-note-health">By typing your name you confirm you have read and understood the health declaration above.</div>
+            <div class="ob-sig-date" id="ob-health-date">Date: March 24, 2026</div>
+          </div>
+        </div>
+        <div class="ob-footer">
+          <div class="ob-error" id="hc-error"></div>
+          <button class="ob-btn" id="hc-btn" onclick="submitHealth()">Continue →</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: LIABILITY WAIVER ── -->
+      <div class="ob-step" id="ob-step-3">
+        <div class="ob-doc-header">
+          <h2 id="ob-waiver-title">📋 Liability Waiver</h2>
+          <p id="ob-waiver-sub">Please read and accept the studio's terms</p>
+        </div>
+        <div class="ob-doc-body">
+
+          <!-- Placeholder document block -->
+          <div class="ob-placeholder-doc">
+            <div class="ob-placeholder-badge" id="ob-placeholder-badge-2">📄 Document Placeholder</div>
+            <div class="ob-placeholder-title" id="ob-waiver-doc-title">Liability Waiver & Release Form</div>
+            <div class="ob-placeholder-text" id="ob-waiver-doc-body">
+              Your liability waiver and release form will appear here. You can upload the full legal text of your waiver — including release of liability, assumption of risk, indemnification clauses, and any studio-specific terms — and it will replace this placeholder.
+            </div>
+            <div class="ob-placeholder-note">
+              ⚙️ <span id="ob-placeholder-note-text-2">You'll upload the full document content in the next step of building your app.</span>
+            </div>
+          </div>
+
+          <!-- Acknowledgement checkboxes -->
+          <div style="background:var(--white);border-radius:12px;border:1px solid var(--border);padding:6px 14px;margin-bottom:14px">
+            <div class="ob-check-item">
+              <div class="ob-checkbox" id="wc1" onclick="toggleCheck('wc1','wc-btn')">✓</div>
+              <div class="ob-check-text"><span id="ob-wc1">I understand that participation in physical activities carries inherent risks and I voluntarily assume those risks.</span> <span class="ob-check-required">*</span></div>
+            </div>
+            <div class="ob-check-item">
+              <div class="ob-checkbox" id="wc2" onclick="toggleCheck('wc2','wc-btn')">✓</div>
+              <div class="ob-check-text"><span id="ob-wc2">I release the studio, its instructors, and staff from any liability for injury, loss, or damage arising from my participation.</span> <span class="ob-check-required">*</span></div>
+            </div>
+            <div class="ob-check-item">
+              <div class="ob-checkbox" id="wc3" onclick="toggleCheck('wc3','wc-btn')">✓</div>
+              <div class="ob-check-text"><span id="ob-wc3">I have read, understood, and agree to the studio's full terms and conditions as presented above.</span> <span class="ob-check-required">*</span></div>
+            </div>
+          </div>
+
+          <!-- Signature -->
+          <div class="ob-sig-section">
+            <div class="ob-sig-label" id="ob-sig-label-waiver">Full Name (digital signature)</div>
+            <input class="ob-sig-input" id="waiver-sig" placeholder="Shira Cohen" oninput="checkSig('waiver-sig','wc-btn')"/>
+            <div class="ob-sig-note" id="ob-sig-note-waiver">By typing your full name you are signing this waiver electronically. This is legally binding.</div>
+            <div class="ob-sig-date" id="ob-waiver-date">Date: March 24, 2026</div>
+          </div>
+        </div>
+        <div class="ob-footer">
+          <div class="ob-error" id="wc-error"></div>
+          <button class="ob-btn" id="wc-btn" onclick="submitWaiver()">Submit & Enter App →</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 4: COMPLETE ── -->
+      <div class="ob-step" id="ob-step-4">
+        <div class="ob-complete">
+          <div class="ob-complete-anim">🎉</div>
+          <h1 id="ob-complete-title">You're all set!</h1>
+          <p id="ob-complete-desc">Your registration is complete. Your signed documents have been saved and sent to your email.</p>
+          <div class="ob-complete-signed">
+            <div class="ob-complete-row"><span id="ob-cr-health">Health Declaration</span><span id="ob-cr-health-val">✅ Signed</span></div>
+            <div class="ob-complete-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px"><span id="ob-cr-waiver">Liability Waiver</span><span id="ob-cr-waiver-val">✅ Signed</span></div>
+            <div class="ob-complete-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px"><span id="ob-cr-date-lbl">Signed on</span><span>March 24, 2026</span></div>
+          </div>
+        </div>
+        <div class="ob-footer">
+          <div class="ob-error"></div>
+          <button class="ob-btn" id="ob-enter-btn" onclick="enterApp()">Start Booking Classes 🧘</button>
+        </div>
+      </div>
+
+    </div><!-- end .onboarding-overlay -->
+
+  </div><!-- end .phone -->
+</div>
+  <div class="demo-reset">
+    <button onclick="resetOnboarding()">↺ Preview First-Time Sign-Up</button>
+  </div>
+</div><!-- end .phone-wrap -->
+
+<script>
+// ══════════════════════════════════════════════
+// TRANSLATIONS
+// ══════════════════════════════════════════════
+const translations = {
+  en: {
+    greeting:'Good morning 👋', hi_name:'Hi, Shira!', ready:'Ready for your next class?',
+    your_membership:'Your Membership', plan_monthly:'Monthly Unlimited',
+    plan_detail:'🧘 All classes included', expires_date:'Expires March 31, 2026',
+    days_left:'8 days left', renew_title:'Your membership expires in 8 days',
+    renew_sub:'Tap to renew now and keep your streak!',
+    stat_classes:'Classes', stat_sessions:'Sessions', stat_streak:'Streak',
+    next_class:'Next Class', see_all:'See all →',
+    class_pilates_core:'Pilates Core', today_dana:'Today · Dana · Studio A',
+    booked_check:'Booked ✓', this_week:'This Week',
+    class_morning_yoga:'Morning Yoga Flow', wed_maya:'Wed, Mar 25 · Maya',
+    class_yin_yoga:'Yin Yoga', wed_noa_spots:'Wed, Mar 25 · Noa · 5 spots left',
+    book_btn:'Book', min60:'60 min', min75:'75 min', min60_full:'60 minutes', min75_full:'75 minutes',
+    class_vinyasa:'Vinyasa Flow', thu_maya_spots:'Thu, Mar 26 · Maya · 7 spots left',
+    nav_home:'Home', nav_schedule:'Schedule', nav_bookings:'My Classes',
+    nav_alerts:'Alerts', nav_profile:'Profile',
+    march_2026:'March 2026',
+    day_mon:'MON', day_tue:'TUE', day_wed:'WED', day_thu:'THU',
+    day_fri:'FRI', day_sat:'SAT', day_sun:'SUN',
+    legend_open:'Open', legend_almost:'Almost Full', legend_full:'Full',
+    tab_upcoming:'Upcoming', tab_history:'History',
+    today_date:'Today — Monday Mar 23', wed_date:'Wednesday Mar 25', thu_date:'Thursday Mar 26',
+    pilates_meta:'11:00 – 12:00 · Dana · Studio A',
+    yoga_meta:'09:00 – 10:00 · Maya · Studio A',
+    vinyasa_meta:'18:00 – 19:15 · Maya · Studio A',
+    today_badge:'Today', attended:'Attended', cancelled:'Cancelled',
+    this_month:'This Month',
+    notif_new:'New', notif_earlier:'Earlier', mark_read:'Mark all read',
+    notif1:'Reminder: Pilates Core starts in 2 hours at 11:00 · Studio A',
+    notif2:'Membership expiring soon! Your Monthly Unlimited expires in 8 days.',
+    notif3:'Booking confirmed! Morning Yoga Flow on Wed Mar 25 at 09:00.',
+    notif4:'New class added: Restorative Yoga on Friday Mar 27 at 10:00.',
+    notif5:'Payment confirmed — ₪390 for Monthly Unlimited. Invoice sent.',
+    today_9am:'Today, 9:00 AM', today_8am:'Today, 8:00 AM', yesterday_345:'Yesterday, 3:45 PM',
+    client_name:'Shira Cohen', member_since:'Member since January 2025 · 48 classes',
+    my_membership:'💳 My Membership', auto_renews:'Auto-renews April 1, 2026',
+    active_badge:'Active', price_label:'Price', price_value:'₪390 / month',
+    next_charge:'Next charge', next_charge_date:'April 1, 2026',
+    manage_membership:'Manage Membership',
+    personal_info:'Personal Info', personal_sub:'Name, phone, email',
+    health_form:'Health Form', health_sub:'Injuries, experience level',
+    payment_history:'Payment History', payment_sub:'Invoices & receipts',
+    notifications_menu:'Notifications', notif_sub:'WhatsApp & push settings',
+    logout:'Log Out',
+    pay1_meta:'Mar 1, 2026 · Auto-renewal · Card',
+    pay2_meta:'Feb 1, 2026 · Auto-renewal · Card',
+    pay3_meta:'Jan 1, 2026 · Auto-renewal · Card',
+    invoice_note:'Invoices are sent via WhatsApp and email after each payment.',
+    instructor_lbl:'Instructor', room_lbl:'Room', duration_lbl:'Duration',
+    spots_lbl:'Spots left', spots_val:'7 / 12 open', level_lbl:'Level',
+    level_inter:'Intermediate', cost_lbl:'Cost', included_plan:'Included in your plan ✓',
+    book_this:'Book This Class', close_btn:'Close',
+    pilates_sheet_meta:'Today, Monday March 23 · 11:00 – 12:00',
+    vinyasa_sheet_meta:'Thursday, March 26 · 18:00 – 19:15',
+    status_lbl:'Status', registered_status:"✅ You're registered",
+    reminder_lbl:'Reminder', reminder_sent:'WhatsApp sent ✓',
+    directions_btn:'Get Directions', cancel_booking:'Cancel Booking',
+    renew_heading:'Renew Membership 🧘', renew_desc:'per month · All classes · Cancel anytime',
+    current_expiry:'Current expiry', new_expiry:'New expiry',
+    payment_method:'Payment method', confirm_renew:'Confirm Renewal — ₪390', not_now:'Not Now',
+    full_name:'Full Name', phone_lbl:'Phone', email_lbl:'Email',
+    dob_lbl:'Date of Birth', member_since_lbl:'Member Since', save_changes:'Save Changes',
+    exp_level:'Experience Level', intermediate:'Intermediate',
+    injuries_lbl:'Injuries / Conditions', injuries_val:'Mild lower back sensitivity',
+    emergency_lbl:'Emergency Contact', update_form:'Update Form',
+    // toasts
+    all_read_toast:'✓ All marked as read', contact_studio_toast:'📲 Contacting studio...',
+    notif_settings_toast:'🔔 Notification settings', logout_toast:'👋 Logged out!',
+    directions_toast:'📍 Directions opened!', cancel_toast:'❌ Booking cancelled.',
+    renewed_toast:'🎉 Renewed! Receipt sent 📲', saved_toast:'✅ Changes saved!',
+    booked_toast:'✅ Booked! Confirmation sent via WhatsApp 📲',
+    vinyasa_booked_toast:'✅ Vinyasa Flow booked! See you Thursday 🧘',
+    no_classes:'😌 No classes scheduled for this day',
+    full_label:'Full',
+    sched_spots:' spots left',
+    sched_full:' · Full ✗',
+  },
+  he: {
+    greeting:'בוקר טוב 👋', hi_name:'!שלום, שירה', ready:'?מוכנ/ה לשיעור הבא',
+    your_membership:'המנוי שלך', plan_monthly:'חודשי ללא הגבלה',
+    plan_detail:'🧘 כל השיעורים כלולים', expires_date:'פג תוקף 31 במרץ 2026',
+    days_left:'8 ימים נותרו', renew_title:'המנוי שלך פג תוקף בעוד 8 ימים',
+    renew_sub:'!לחצ/י כאן לחידוש ושמירת הרצף',
+    stat_classes:'שיעורים', stat_sessions:'כניסות', stat_streak:'רצף',
+    next_class:'השיעור הבא', see_all:'← הכל',
+    class_pilates_core:'פילאטיס קור', today_dana:'היום · דנה · אולם א',
+    booked_check:'רשומ/ה ✓', this_week:'השבוע',
+    class_morning_yoga:'יוגה בוקר', wed_maya:'רביעי, 25 מרץ · מאיה',
+    class_yin_yoga:'יין יוגה', wed_noa_spots:'רביעי, 25 מרץ · נועה · 5 מקומות',
+    book_btn:'הרשמה', min60:'60 דק׳', min75:'75 דק׳', min60_full:'60 דקות', min75_full:'75 דקות',
+    class_vinyasa:'וינייסה פלו', thu_maya_spots:'חמישי, 26 מרץ · מאיה · 7 מקומות',
+    nav_home:'בית', nav_schedule:'שיעורים', nav_bookings:'ההזמנות שלי',
+    nav_alerts:'התראות', nav_profile:'פרופיל',
+    march_2026:'מרץ 2026',
+    day_mon:'שני', day_tue:'שלישי', day_wed:'רביעי', day_thu:'חמישי',
+    day_fri:'שישי', day_sat:'שבת', day_sun:'ראשון',
+    legend_open:'פתוח', legend_almost:'כמעט מלא', legend_full:'מלא',
+    tab_upcoming:'קרובים', tab_history:'היסטוריה',
+    today_date:'היום — שני 23 מרץ', wed_date:'רביעי 25 מרץ', thu_date:'חמישי 26 מרץ',
+    pilates_meta:'11:00 – 12:00 · דנה · אולם א',
+    yoga_meta:'09:00 – 10:00 · מאיה · אולם א',
+    vinyasa_meta:'18:00 – 19:15 · מאיה · אולם א',
+    today_badge:'היום', attended:'השתתפ/ה', cancelled:'בוטל',
+    this_month:'החודש',
+    notif_new:'חדש', notif_earlier:'קודם', mark_read:'סמן/י הכל כנקרא',
+    notif1:'תזכורת: פילאטיס קור מתחיל בעוד שעתיים בשעה 11:00 · אולם א',
+    notif2:'המנוי שלך עומד לפוג! חודשי ללא הגבלה פג בעוד 8 ימים.',
+    notif3:'ההזמנה אושרה! יוגה בוקר ביום רביעי 25 מרץ בשעה 09:00.',
+    notif4:'שיעור חדש: יוגה מרגיעה ביום שישי 27 מרץ בשעה 10:00.',
+    notif5:'תשלום אושר — ₪390 עבור מנוי חודשי. חשבונית נשלחה.',
+    today_9am:'היום, 9:00', today_8am:'היום, 8:00', yesterday_345:'אתמול, 15:45',
+    client_name:'שירה כהן', member_since:'חבר/ה מינואר 2025 · 48 שיעורים',
+    my_membership:'💳 המנוי שלי', auto_renews:'מתחדש אוטומטית 1 באפריל 2026',
+    active_badge:'פעיל', price_label:'מחיר', price_value:'₪390 / חודש',
+    next_charge:'חיוב הבא', next_charge_date:'1 באפריל 2026',
+    manage_membership:'ניהול מנוי',
+    personal_info:'פרטים אישיים', personal_sub:'שם, טלפון, אימייל',
+    health_form:'טופס בריאות', health_sub:'פציעות, רמת ניסיון',
+    payment_history:'היסטוריית תשלומים', payment_sub:'חשבוניות וקבלות',
+    notifications_menu:'התראות', notif_sub:'הגדרות WhatsApp ופוש',
+    logout:'התנתקות',
+    pay1_meta:'1 מרץ 2026 · חידוש אוטומטי · כרטיס',
+    pay2_meta:'1 פברואר 2026 · חידוש אוטומטי · כרטיס',
+    pay3_meta:'1 ינואר 2026 · חידוש אוטומטי · כרטיס',
+    invoice_note:'חשבוניות נשלחות ב-WhatsApp ובמייל לאחר כל תשלום.',
+    instructor_lbl:'מדריך/ה', room_lbl:'אולם', duration_lbl:'משך',
+    spots_lbl:'מקומות פנויים', spots_val:'7 / 12 פתוח', level_lbl:'רמה',
+    level_inter:'בינוני', cost_lbl:'עלות', included_plan:'כלול במנוי שלך ✓',
+    book_this:'הרשמה לשיעור', close_btn:'סגור',
+    pilates_sheet_meta:'היום, שני 23 מרץ · 11:00 – 12:00',
+    vinyasa_sheet_meta:'חמישי, 26 מרץ · 18:00 – 19:15',
+    status_lbl:'סטטוס', registered_status:'✅ את/ה רשומ/ה לשיעור',
+    reminder_lbl:'תזכורת', reminder_sent:'WhatsApp נשלח ✓',
+    directions_btn:'נווט/י לסטודיו', cancel_booking:'ביטול הרשמה',
+    renew_heading:'חידוש מנוי 🧘', renew_desc:'לחודש · כל השיעורים · ביטול בכל עת',
+    current_expiry:'תוקף נוכחי', new_expiry:'תוקף חדש',
+    payment_method:'אמצעי תשלום', confirm_renew:'אישור חידוש — ₪390', not_now:'לא עכשיו',
+    full_name:'שם מלא', phone_lbl:'טלפון', email_lbl:'אימייל',
+    dob_lbl:'תאריך לידה', member_since_lbl:'חבר/ה מאז', save_changes:'שמור/י שינויים',
+    exp_level:'רמת ניסיון', intermediate:'בינוני',
+    injuries_lbl:'פציעות / מצבים', injuries_val:'רגישות קלה בגב תחתון',
+    emergency_lbl:'איש קשר לחירום', update_form:'עדכון טופס',
+    // toasts
+    all_read_toast:'✓ כל ההתראות סומנו כנקראו', contact_studio_toast:'📲 יוצר/ת קשר עם הסטודיו...',
+    notif_settings_toast:'🔔 הגדרות התראות', logout_toast:'!👋 להתראות',
+    directions_toast:'!📍 ניווט נפתח', cancel_toast:'❌ ההרשמה בוטלה.',
+    renewed_toast:'!🎉 המנוי חודש! קבלה נשלחה 📲', saved_toast:'!✅ השינויים נשמרו',
+    booked_toast:'!✅ נרשמת/נרשם! אישור נשלח ב-WhatsApp 📲',
+    vinyasa_booked_toast:'!✅ נרשמת/נרשם לוינייסה פלו! נתראה ביום חמישי 🧘',
+    no_classes:'😌 אין שיעורים מתוכננים ליום זה',
+    full_label:'מלא',
+    sched_spots:' מקומות',
+    sched_full:' · מלא ✗',
+  }
+};
+
+let currentLang = 'he';
+
+// Quick translation lookup
+function T(key) {
+  return translations[currentLang][key] || translations['en'][key] || key;
+}
+
+// Apply all data-i18n text nodes
+function applyLang(lang) {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = translations[lang][key];
+    if (val !== undefined) el.textContent = val;
+  });
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  const phone = document.getElementById('phone');
+
+  // Toggle RTL
+  if (lang === 'he') {
+    phone.classList.add('rtl');
+    document.getElementById('phone-label').textContent = 'אפליקציית לקוח · תצוגת חבר/ה';
+  } else {
+    phone.classList.remove('rtl');
+    document.getElementById('phone-label').textContent = 'Client App · Member View';
+  }
+
+  // Toggle active button
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-he').classList.toggle('active', lang === 'he');
+
+  // Apply all translations
+  applyLang(lang);
+
+  // Re-render schedule with translated labels
+  renderSchedule(currentDayIdx);
+
+  // Show toast
+  showToast(lang === 'he' ? '🇮🇱 ממשק בעברית' : '🇬🇧 Interface in English');
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function goTo(screen, navEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + screen);
+  if (target) { target.classList.add('active'); target.scrollTop = 0; }
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+// SHEETS
+// ══════════════════════════════════════════════
+function showSheet(id) { document.getElementById(id).classList.add('open'); }
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.getElementById('phone').appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ══════════════════════════════════════════════
+// BOOKING
+// ══════════════════════════════════════════════
+function bookClass(btn) {
+  btn.textContent = T('booked_check');
+  btn.classList.add('booked');
+  btn.onclick = null;
+  showToast(T('booked_toast'));
+}
+function bookConfirm() { showToast(T('vinyasa_booked_toast')); }
+
+// ══════════════════════════════════════════════
+// SCHEDULE
+// ══════════════════════════════════════════════
+const daySchedules = {
+  0: [
+    { time:'09:00', durKey:'min60', nameKey:'class_morning_yoga', instructor:'Maya', room:'Studio A', full:true,  color:'' },
+    { time:'11:00', durKey:'min60', nameKey:'class_pilates_core', instructor:'Dana', room:'Studio B', full:false, color:'background:#FEEBC8;color:#9C4221', spots:2 },
+    { time:'18:00', durKey:'min75', nameKey:'class_vinyasa',      instructor:'Maya', room:'Studio A', full:false, color:'', spots:7 },
+    { time:'19:30', durKey:'min60', nameKey:'class_yin_yoga',     instructor:'Noa',  room:'Studio A', full:false, color:'', spots:5 },
+  ],
+  1: [
+    { time:'11:00', durKey:'min75', nameKey:'class_morning_yoga', instructor:'Maya', room:'Studio A', full:false, color:'', spots:5 },
+    { time:'18:00', durKey:'min60', nameKey:'class_pilates_core', instructor:'Dana', room:'Studio B', full:true,  color:'background:#C6F6D5;color:#276749' },
+  ],
+  2: [
+    { time:'09:00', durKey:'min60', nameKey:'class_morning_yoga', instructor:'Noa',  room:'Studio B', full:false, color:'', spots:6 },
+    { time:'18:00', durKey:'min75', nameKey:'class_vinyasa',      instructor:'Maya', room:'Studio A', full:false, color:'', spots:8 },
+    { time:'19:30', durKey:'min60', nameKey:'class_yin_yoga',     instructor:'Noa',  room:'Studio A', full:false, color:'', spots:5 },
+  ],
+  3: [
+    { time:'07:00', durKey:'min60', nameKey:'class_pilates_core', instructor:'Dana', room:'Studio B', full:true,  color:'background:#C6F6D5;color:#276749' },
+    { time:'11:00', durKey:'min60', nameKey:'class_pilates_core', instructor:'Dana', room:'Studio B', full:false, color:'background:#FEEBC8;color:#9C4221', spots:3 },
+    { time:'18:00', durKey:'min75', nameKey:'class_vinyasa',      instructor:'Maya', room:'Studio A', full:false, color:'', spots:7 },
+  ],
+  4: [
+    { time:'09:00', durKey:'min75', nameKey:'class_morning_yoga', instructor:'Maya', room:'Studio A', full:true,  color:'background:#C6F6D5;color:#276749' },
+    { time:'19:30', durKey:'min60', nameKey:'class_yin_yoga',     instructor:'Noa',  room:'Studio A', full:false, color:'', spots:4 },
+  ],
+  5: [],
+  6: [
+    { time:'09:00', durKey:'min75', nameKey:'class_vinyasa',      instructor:'Dana', room:'Studio A', full:false, color:'', spots:3 },
+  ],
+};
+
+let currentDayIdx = 1;
+
+function renderSchedule(idx) {
+  const classes = daySchedules[idx] || [];
+  const container = document.getElementById('schedule-classes');
+  if (!classes.length) {
+    container.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:14px">${T('no_classes')}</div>`;
+    return;
+  }
+  container.innerHTML = classes.map(c => {
+    const name = T(c.nameKey);
+    const dur  = T(c.durKey);
+    const meta = c.full
+      ? `${c.instructor} · ${c.room}${T('sched_full')}`
+      : `${c.instructor} · ${c.room} · ${c.spots}${T('sched_spots')}`;
+    return `
+      <div class="class-row" onclick="showSheet('${c.full ? 'sheet-class-booked' : 'sheet-class-open'}')">
+        <div class="class-time-badge" style="${c.color}">
+          <div class="time">${c.time}</div>
+          <div class="dur">${dur}</div>
+        </div>
+        <div class="class-info">
+          <div class="class-name">${name}</div>
+          <div class="class-meta">${meta}</div>
+        </div>
+        ${c.full
+          ? `<button class="book-btn full">${T('full_label')}</button>`
+          : `<button class="book-btn" onclick="event.stopPropagation();bookClass(this)">${T('book_btn')}</button>`
+        }
+      </div>`;
+  }).join('');
+}
+
+function selectDay(pill, idx) {
+  document.querySelectorAll('.day-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  currentDayIdx = idx;
+  renderSchedule(idx);
+}
+
+// ══════════════════════════════════════════════
+// BOOKING TABS
+// ══════════════════════════════════════════════
+function switchBookingTab(btn, tab) {
+  document.querySelectorAll('.tab-switch-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('bookings-upcoming').style.display = tab === 'upcoming' ? 'block' : 'none';
+  document.getElementById('bookings-history').style.display  = tab === 'history'  ? 'block' : 'none';
+}
+
+// ══════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════
+
+const OB_TRANSLATIONS = {
+  en: {
+    step_of: (n,t) => `Step ${n} of ${t}`,
+    welcome_title: 'Welcome, Shira!',
+    welcome_desc:  'Before you book your first class, we need just a few minutes to complete your registration. This only happens once.',
+    ob_list_health: 'Health Declaration',
+    ob_list_health_sub: 'Medical background & conditions',
+    ob_list_waiver: 'Liability Waiver',
+    ob_list_waiver_sub: 'Studio terms & release of liability',
+    welcome_btn: 'Get Started →',
+    health_title: '💊 Health Declaration',
+    health_sub:   'Please read carefully and confirm each item',
+    placeholder_badge: '📄 Document Placeholder',
+    health_doc_title: 'Health Declaration Form',
+    health_doc_body: 'Your health declaration document content will appear here. You can upload the full text — including medical questions, conditions checklist, and health policies — and it will replace this placeholder.',
+    placeholder_note: "You'll upload the full document content in the next step of building your app.",
+    hc1: 'I confirm that I am in good physical health and have no medical conditions that would prevent me from participating in yoga or Pilates classes.',
+    hc2: 'I have disclosed any injuries, chronic conditions, or physical limitations that the studio should be aware of.',
+    hc3: 'I agree to inform my instructor before each class of any changes to my physical condition.',
+    sig_label_health: 'Full Name (acts as signature)',
+    sig_note_health: 'By typing your name you confirm you have read and understood the health declaration above.',
+    health_date: 'Date: March 24, 2026',
+    health_continue: 'Continue →',
+    hc_err_checks: 'Please confirm all items above.',
+    hc_err_sig: 'Please type your full name to sign.',
+    waiver_title: '📋 Liability Waiver',
+    waiver_sub:   "Please read and accept the studio's terms",
+    waiver_doc_title: 'Liability Waiver & Release Form',
+    waiver_doc_body: "Your liability waiver and release form will appear here. You can upload the full legal text — including release of liability, assumption of risk, and indemnification clauses — and it will replace this placeholder.",
+    wc1: 'I understand that participation in physical activities carries inherent risks and I voluntarily assume those risks.',
+    wc2: 'I release the studio, its instructors, and staff from any liability for injury, loss, or damage arising from my participation.',
+    wc3: "I have read, understood, and agree to the studio's full terms and conditions as presented above.",
+    sig_label_waiver: 'Full Name (digital signature)',
+    sig_note_waiver: 'By typing your full name you are signing this waiver electronically. This is legally binding.',
+    waiver_date: 'Date: March 24, 2026',
+    waiver_submit: 'Submit & Enter App →',
+    wc_err_checks: 'Please confirm all items above.',
+    wc_err_sig: 'Please type your full name to sign.',
+    complete_title: "You're all set!",
+    complete_desc:  'Your registration is complete. Your signed documents have been saved and sent to your email.',
+    cr_health: 'Health Declaration', cr_health_val: '✅ Signed',
+    cr_waiver: 'Liability Waiver',   cr_waiver_val: '✅ Signed',
+    cr_date_lbl: 'Signed on',
+    enter_btn: 'Start Booking Classes 🧘',
+  },
+  he: {
+    step_of: (n,t) => `שלב ${n} מתוך ${t}`,
+    welcome_title: '!ברוכ/ה הבא/ה, שירה',
+    welcome_desc:  'לפני שתזמין/י שיעור ראשון, נצטרך כמה דקות להשלמת ההרשמה. זה קורה רק פעם אחת.',
+    ob_list_health: 'הצהרת בריאות',
+    ob_list_health_sub: 'רקע רפואי ומצב בריאותי',
+    ob_list_waiver: 'כתב ויתור',
+    ob_list_waiver_sub: 'תנאי הסטודיו ושחרור מאחריות',
+    welcome_btn: 'בוא/י נתחיל ←',
+    health_title: '💊 הצהרת בריאות',
+    health_sub:   'קרא/י בעיון ואשר/י כל סעיף',
+    placeholder_badge: '📄 מסמך לדוגמה',
+    health_doc_title: 'טופס הצהרת בריאות',
+    health_doc_body: 'תוכן טופס הצהרת הבריאות שלך יופיע כאן. תוכל/י להעלות את הטקסט המלא — כולל שאלות רפואיות ורשימת מצבים — והוא יחליף מסמך זה.',
+    placeholder_note: 'תעלה/י את תוכן המסמך המלא בשלב הבא בבניית האפליקציה.',
+    hc1: 'אני מאשר/ת שאני במצב בריאות טוב ואין לי מצבים רפואיים המונעים ממני להשתתף בשיעורי יוגה או פילאטיס.',
+    hc2: 'גיליתי כל פציעה, מצב כרוני או מגבלה פיזית שהסטודיו צריך להיות מודע לה.',
+    hc3: 'אני מסכימ/ה לעדכן את המדריך/ה לפני כל שיעור על כל שינוי במצבי הגופני.',
+    sig_label_health: 'שם מלא (משמש כחתימה)',
+    sig_note_health: 'בהקלדת שמך את/ה מאשר/ת שקראת והבנת את הצהרת הבריאות לעיל.',
+    health_date: 'תאריך: 24 במרץ 2026',
+    health_continue: 'המשך ←',
+    hc_err_checks: 'אנא אשר/י את כל הסעיפים לעיל.',
+    hc_err_sig: 'אנא הקלד/י את שמך המלא לחתימה.',
+    waiver_title: '📋 כתב ויתור',
+    waiver_sub:   'קרא/י ואשר/י את תנאי הסטודיו',
+    waiver_doc_title: 'כתב ויתור ושחרור מאחריות',
+    waiver_doc_body: 'טקסט כתב הויתור ושחרור האחריות יופיע כאן. תוכל/י להעלות את הנוסח המשפטי המלא — כולל ויתור על תביעות, הנחת סיכון ופטור מאחריות — והוא יחליף מסמך זה.',
+    wc1: 'אני מבין/ה שהשתתפות בפעילות גופנית כרוכה בסיכונים מובנים ואני מקבל/ת אותם מרצוני.',
+    wc2: 'אני משחרר/ת את הסטודיו, המדריכים והצוות מכל אחריות לפציעה, אובדן או נזק הנובעים מהשתתפותי.',
+    wc3: 'קראתי, הבנתי ואני מסכימ/ה לתנאים ולהגבלות המלאים של הסטודיו.',
+    sig_label_waiver: 'שם מלא (חתימה דיגיטלית)',
+    sig_note_waiver: 'בהקלדת שמך המלא את/ה חותמ/ת על כתב ויתור זה באופן אלקטרוני. מסמך זה מחייב מבחינה משפטית.',
+    waiver_date: 'תאריך: 24 במרץ 2026',
+    waiver_submit: 'שלח/י וכניסה לאפליקציה ←',
+    wc_err_checks: 'אנא אשר/י את כל הסעיפים לעיל.',
+    wc_err_sig: 'אנא הקלד/י את שמך המלא לחתימה.',
+    complete_title: '!הכל מוכן',
+    complete_desc:  'ההרשמה הושלמה. המסמכים החתומים נשמרו ונשלחו לכתובת האימייל שלך.',
+    cr_health: 'הצהרת בריאות', cr_health_val: '✅ נחתם',
+    cr_waiver: 'כתב ויתור',    cr_waiver_val: '✅ נחתם',
+    cr_date_lbl: 'תאריך חתימה',
+    enter_btn: 'התחיל/י להזמין שיעורים 🧘',
+  }
+};
+
+// Track which checkboxes are ticked
+const checks = { hc1:false, hc2:false, hc3:false, wc1:false, wc2:false, wc3:false };
+
+function toggleCheck(id, btnId) {
+  checks[id] = !checks[id];
+  const box = document.getElementById(id);
+  box.classList.toggle('checked', checks[id]);
+  box.textContent = checks[id] ? '✓' : '';
+}
+
+function checkSig(inputId, btnId) { /* validation happens on submit */ }
+
+function applyObLang(lang) {
+  const t = OB_TRANSLATIONS[lang];
+  document.getElementById('ob-step-label').textContent = t.step_of(currentObStep, 3);
+  document.getElementById('ob-welcome-title').textContent   = t.welcome_title;
+  document.getElementById('ob-welcome-desc').textContent    = t.welcome_desc;
+  document.getElementById('ob-list-health').textContent     = t.ob_list_health;
+  document.getElementById('ob-list-health-sub').textContent = t.ob_list_health_sub;
+  document.getElementById('ob-list-waiver').textContent     = t.ob_list_waiver;
+  document.getElementById('ob-list-waiver-sub').textContent = t.ob_list_waiver_sub;
+  document.getElementById('ob-welcome-btn').textContent     = t.welcome_btn;
+  document.getElementById('ob-health-title').textContent    = t.health_title;
+  document.getElementById('ob-health-sub').textContent      = t.health_sub;
+  document.getElementById('ob-placeholder-badge').textContent  = t.placeholder_badge;
+  document.getElementById('ob-health-doc-title').textContent   = t.health_doc_title;
+  document.getElementById('ob-health-doc-body').textContent    = t.health_doc_body;
+  document.getElementById('ob-placeholder-note-text').textContent = t.placeholder_note;
+  document.getElementById('ob-hc1').textContent = t.hc1;
+  document.getElementById('ob-hc2').textContent = t.hc2;
+  document.getElementById('ob-hc3').textContent = t.hc3;
+  document.getElementById('ob-sig-label-health').textContent = t.sig_label_health;
+  document.getElementById('ob-sig-note-health').textContent  = t.sig_note_health;
+  document.getElementById('ob-health-date').textContent      = t.health_date;
+  document.getElementById('hc-btn').textContent              = t.health_continue;
+  document.getElementById('ob-waiver-title').textContent     = t.waiver_title;
+  document.getElementById('ob-waiver-sub').textContent       = t.waiver_sub;
+  document.getElementById('ob-placeholder-badge-2').textContent   = t.placeholder_badge;
+  document.getElementById('ob-waiver-doc-title').textContent      = t.waiver_doc_title;
+  document.getElementById('ob-waiver-doc-body').textContent       = t.waiver_doc_body;
+  document.getElementById('ob-placeholder-note-text-2').textContent = t.placeholder_note;
+  document.getElementById('ob-wc1').textContent = t.wc1;
+  document.getElementById('ob-wc2').textContent = t.wc2;
+  document.getElementById('ob-wc3').textContent = t.wc3;
+  document.getElementById('ob-sig-label-waiver').textContent = t.sig_label_waiver;
+  document.getElementById('ob-sig-note-waiver').textContent  = t.sig_note_waiver;
+  document.getElementById('ob-waiver-date').textContent      = t.waiver_date;
+  document.getElementById('wc-btn').textContent              = t.waiver_submit;
+  document.getElementById('ob-complete-title').textContent   = t.complete_title;
+  document.getElementById('ob-complete-desc').textContent    = t.complete_desc;
+  document.getElementById('ob-cr-health').textContent        = t.cr_health;
+  document.getElementById('ob-cr-health-val').textContent    = t.cr_health_val;
+  document.getElementById('ob-cr-waiver').textContent        = t.cr_waiver;
+  document.getElementById('ob-cr-waiver-val').textContent    = t.cr_waiver_val;
+  document.getElementById('ob-cr-date-lbl').textContent      = t.cr_date_lbl;
+  document.getElementById('ob-enter-btn').textContent        = t.enter_btn;
+}
+
+let currentObStep = 1;
+
+function goToObStep(n) {
+  // Hide all steps
+  document.querySelectorAll('.ob-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('ob-step-' + n).classList.add('active');
+  currentObStep = n;
+
+  const total = 3;
+  const pct = n === 4 ? 100 : Math.round((n / (total + 1)) * 100);
+  document.getElementById('ob-progress').style.width = pct + '%';
+
+  const t = OB_TRANSLATIONS[currentLang];
+  if (n <= total) {
+    document.getElementById('ob-step-label').textContent = t.step_of(n, total);
+  } else {
+    document.getElementById('ob-step-label').textContent = '✅';
+  }
+}
+
+function submitHealth() {
+  const t = OB_TRANSLATIONS[currentLang];
+  const allChecked = checks.hc1 && checks.hc2 && checks.hc3;
+  const sig = document.getElementById('health-sig').value.trim();
+  const errEl = document.getElementById('hc-error');
+  if (!allChecked) { errEl.textContent = t.hc_err_checks; return; }
+  if (!sig) { errEl.textContent = t.hc_err_sig; return; }
+  errEl.textContent = '';
+  // Mark health step done
+  document.querySelectorAll('.ob-steps-check')[0].textContent = '✅';
+  goToObStep(3);
+}
+
+function submitWaiver() {
+  const t = OB_TRANSLATIONS[currentLang];
+  const allChecked = checks.wc1 && checks.wc2 && checks.wc3;
+  const sig = document.getElementById('waiver-sig').value.trim();
+  const errEl = document.getElementById('wc-error');
+  if (!allChecked) { errEl.textContent = t.wc_err_checks; return; }
+  if (!sig) { errEl.textContent = t.wc_err_sig; return; }
+  errEl.textContent = '';
+  // Mark waiver step done
+  document.querySelectorAll('.ob-steps-check')[1].textContent = '✅';
+  goToObStep(4);
+}
+
+function enterApp() {
+  document.getElementById('onboarding').classList.add('hidden');
+  showToast(currentLang === 'he' ? '!ברוכ/ה הבא/ה לסטודיו 🧘' : '🧘 Welcome to the studio!');
+}
+
+function resetOnboarding() {
+  // Reset checkboxes
+  ['hc1','hc2','hc3','wc1','wc2','wc3'].forEach(id => {
+    checks[id] = false;
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('checked'); el.textContent = ''; }
+  });
+  // Clear signatures & errors
+  ['health-sig','waiver-sig'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['hc-error','wc-error'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=''; });
+  // Reset step markers
+  document.querySelectorAll('.ob-steps-check').forEach(el => el.textContent = '○');
+  // Show onboarding
+  document.getElementById('onboarding').classList.remove('hidden');
+  goToObStep(1);
+  applyObLang(currentLang);
+}
+
+// Hook setLang to also update onboarding text
+const _origSetLang = setLang;
+window.setLang = function(lang) {
+  _origSetLang(lang);
+  applyObLang(lang);
+  // Keep RTL on onboarding too
+  const ob = document.getElementById('onboarding');
+  ob.style.direction = lang === 'he' ? 'rtl' : 'ltr';
+};
+
+// ══════════════════════════════════════════════
+// INIT — default language: Hebrew
+// ══════════════════════════════════════════════
+renderSchedule(currentDayIdx);
+
+// Boot in Hebrew
+(function() {
+  const phone = document.getElementById('phone');
+  phone.classList.add('rtl');
+  phone.style.direction = 'rtl';
+  document.getElementById('onboarding').style.direction = 'rtl';
+  document.getElementById('btn-en').classList.remove('active');
+  document.getElementById('btn-he').classList.add('active');
+  applyLang('he');
+  applyObLang('he');
+})();
+</script>
+
+<!-- ══ SUPABASE DATA LAYER ══════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async () => {
+  const { createClient } = supabase;
+  const sb = createClient(
+    'https://ncfcyrmvbkhrwcxonnmt.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZmN5cm12YmtocndjeG9ubm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzQ1MzcsImV4cCI6MjA4OTk1MDUzN30.F-2EWzolhWKPzu91T9vrI_nrAZQUwQ8xT0R89KHC3as'
+  );
+
+  // Patch renderSchedule to also accept direct `name` and `dur` strings from DB
+  const _origRender = window.renderSchedule;
+  window.renderSchedule = function(idx) {
+    const classes = daySchedules[idx] || [];
+    const container = document.getElementById('schedule-classes');
+    if (!classes.length) {
+      container.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:14px">${T('no_classes')}</div>`;
+      return;
+    }
+    container.innerHTML = classes.map(c => {
+      const name = c.name || T(c.nameKey) || c.nameKey;
+      const dur  = c.dur  || T(c.durKey)  || '';
+      const spotsTxt = c.spots != null ? c.spots : '';
+      const meta = c.full
+        ? `${c.instructor} · ${c.room}${T('sched_full')}`
+        : `${c.instructor} · ${c.room}${spotsTxt ? ' · ' + spotsTxt + T('sched_spots') : ''}`;
+      return `
+        <div class="class-row" onclick="showSheet('${c.full ? 'sheet-class-booked' : 'sheet-class-open'}')">
+          <div class="class-time-badge" style="${c.color||''}">
+            <div class="time">${c.time}</div>
+            <div class="dur">${dur}</div>
+          </div>
+          <div class="class-info">
+            <div class="class-name">${name}</div>
+            <div class="class-meta">${meta}</div>
+          </div>
+          ${c.full
+            ? `<button class="book-btn full">${T('full_label')}</button>`
+            : `<button class="book-btn" data-session-id="${c.sessionId||''}" onclick="event.stopPropagation();bookClass(this)">${T('book_btn')}</button>`
+          }
+        </div>`;
+    }).join('');
+  };
+
+  // ── Load this week's schedule from Supabase ──
+  async function loadScheduleDB() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate() + 7);
+    const { data, error } = await sb
+      .from('class_sessions')
+      .select('*, instructors(name), rooms(name), bookings(id)')
+      .gte('start_time', today.toISOString())
+      .lt('start_time',  weekEnd.toISOString())
+      .eq('status', 'scheduled')
+      .order('start_time');
+    if (error || !data || !data.length) return; // keep static fallback
+
+    // Clear existing daySchedules and repopulate
+    for (let i = 0; i < 7; i++) daySchedules[i] = [];
+
+    data.forEach(sess => {
+      const start = new Date(sess.start_time);
+      const end   = new Date(sess.end_time);
+      const dayIdx = Math.floor((start - today) / 86400000);
+      if (dayIdx < 0 || dayIdx > 6) return;
+      const durationMin = Math.round((end - start) / 60000);
+      const time = start.toTimeString().slice(0,5);
+      const booked = (sess.bookings || []).length;
+      const full = booked >= (sess.max_capacity || 12);
+      const spots = Math.max(0, (sess.max_capacity || 12) - booked);
+      daySchedules[dayIdx].push({
+        sessionId: sess.id,
+        name: sess.name,
+        dur: `${durationMin} min`,
+        instructor: sess.instructors?.name || 'Instructor',
+        room: sess.rooms?.name || 'Studio',
+        full,
+        spots: full ? null : spots,
+        color: '',
+        time,
+      });
+    });
+
+    renderSchedule(currentDayIdx);
+  }
+
+  // ── Load client membership info ──────────────
+  async function loadMembershipDB() {
+    const { data: clientData } = await sb
+      .from('clients')
+      .select(`name, client_memberships(*, membership_plans(name, sessions_limit))`)
+      .eq('email', 'shira@example.com')
+      .single();
+    if (!clientData) return;
+
+    // Update membership card
+    const mem = clientData.client_memberships?.find(m => m.status === 'active');
+    if (!mem) return;
+    const planName = mem.membership_plans?.name;
+    const sessLeft = mem.membership_plans?.sessions_limit == null
+      ? '∞'
+      : String(mem.membership_plans.sessions_limit - (mem.sessions_used || 0));
+    const expDate = new Date(mem.end_date).toLocaleDateString('he-IL', { day:'numeric', month:'long' });
+
+    // Patch membership text in the home screen stat cards/membership card
+    document.querySelectorAll('.mem-plan, [data-i18n="plan_name"]').forEach(el => el.textContent = planName);
+    document.querySelectorAll('.mem-sessions, [data-i18n="sessions_left"]').forEach(el => el.textContent = sessLeft);
+    document.querySelectorAll('.mem-expiry, [data-i18n="mem_expiry"]').forEach(el => {
+      el.textContent = el.textContent.replace(/\d+.*/, expDate);
+    });
+  }
+
+  // ── Wire bookClass to also save to Supabase ──
+  const _origBookClass = window.bookClass;
+  window.bookClass = async function(btn) {
+    const sessionId = btn.dataset.sessionId;
+    _origBookClass(btn); // update UI immediately
+    if (!sessionId) return;
+    // Get demo client ID
+    const { data: clientData } = await sb.from('clients').select('id').eq('email','shira@example.com').single();
+    if (!clientData) return;
+    await sb.from('bookings').upsert({ client_id: clientData.id, session_id: sessionId, status: 'confirmed' }, { onConflict: 'client_id,session_id' });
+    // Update sessions_used
+    const { data: memData } = await sb.from('client_memberships').select('id, sessions_used').eq('client_id', clientData.id).eq('status','active').single();
+    if (memData) await sb.from('client_memberships').update({ sessions_used: (memData.sessions_used||0)+1 }).eq('id', memData.id);
+  };
+
+  // ── Init ─────────────────────────────────────
+  await Promise.all([loadScheduleDB(), loadMembershipDB()]);
+})();
+</script>
+</body>
+</html>
