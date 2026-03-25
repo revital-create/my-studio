@@ -579,6 +579,7 @@
         <button class="filter-btn" onclick="toggleFilter(this,'Expiring')">Expiring</button>
         <button class="filter-btn" onclick="toggleFilter(this,'Inactive')">Inactive</button>
         <button class="topbar-btn" onclick="openModal('modal-add-client')">+ New Client</button>
+        <button class="topbar-btn secondary" onclick="openModal('modal-add-credits')">🎁 Add Credits</button>
       </div>
 
       <div class="card">
@@ -972,6 +973,38 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-payment')">Cancel</button>
       <button class="btn btn-primary" onclick="closeModal('modal-add-payment');showToast('✅ Payment recorded! Receipt sent via WhatsApp 📲')">Record & Send Receipt</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Credits Modal -->
+<div class="modal-overlay" id="modal-add-credits" onclick="closeOnOverlay(event,'modal-add-credits')">
+  <div class="modal">
+    <h2>🎁 Add Credits to Client</h2>
+    <div class="form-row">
+      <label>Client</label>
+      <input id="credits-client-input" placeholder="Type client name..." oninput="filterCreditsClients(this.value)" autocomplete="off"/>
+      <div id="credits-client-dropdown" style="background:#fff;border:1.5px solid var(--border);border-radius:8px;max-height:160px;overflow-y:auto;display:none;margin-top:4px;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
+      <input type="hidden" id="credits-client-id"/>
+    </div>
+    <div class="form-row">
+      <label>Plan</label>
+      <select id="credits-plan-select">
+        <option value="">Loading plans...</option>
+      </select>
+    </div>
+    <div class="form-two">
+      <div class="form-row"><label>Start Date</label><input type="date" id="credits-start-date"/></div>
+      <div class="form-row"><label>End Date</label><input type="date" id="credits-end-date"/></div>
+    </div>
+    <div class="form-row" id="credits-sessions-row" style="display:none">
+      <label>Sessions to Grant</label>
+      <input type="number" id="credits-sessions" placeholder="e.g. 10" min="1"/>
+    </div>
+    <div class="form-row"><label>Notes (optional)</label><input id="credits-notes" placeholder="e.g. Makeup for missed classes"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-credits')">Cancel</button>
+      <button class="btn btn-primary" id="credits-save-btn" onclick="saveCredits()">Add Credits</button>
     </div>
   </div>
 </div>
@@ -1593,6 +1626,95 @@ document.querySelector('.nav-item.active')._page = 'dashboard';
     _origNavigate && _origNavigate(page, el);
     if (page === 'clients') loadClientsDB();
     if (page === 'dashboard') Promise.all([loadClientsDB(), loadScheduleDB()]);
+  };
+
+  // ── Credits modal ────────────────────────────
+  async function initCreditsModal() {
+    // Populate plan selector
+    const { data: plans } = await sb.from('membership_plans').select('*').eq('active', true);
+    const sel = document.getElementById('credits-plan-select');
+    if (sel && plans) {
+      sel.innerHTML = plans.map(p =>
+        `<option value="${p.id}" data-days="${p.duration_days}" data-sessions="${p.sessions_limit ?? ''}">${p.name} — ₪${p.price}${p.sessions_limit ? ' · ' + p.sessions_limit + ' כניסות' : ' · ללא הגבלה'}</option>`
+      ).join('');
+    }
+    // Set default dates
+    const today = new Date().toISOString().slice(0,10);
+    const startEl = document.getElementById('credits-start-date');
+    const endEl   = document.getElementById('credits-end-date');
+    if (startEl) startEl.value = today;
+    // Auto-set end date when plan changes
+    if (sel) sel.addEventListener('change', () => {
+      const opt = sel.selectedOptions[0];
+      const days = parseInt(opt?.dataset.days || 30);
+      const sessions = opt?.dataset.sessions;
+      const start = new Date(startEl.value || today);
+      const end = new Date(start); end.setDate(end.getDate() + days);
+      if (endEl) endEl.value = end.toISOString().slice(0,10);
+      const sessRow = document.getElementById('credits-sessions-row');
+      if (sessRow) sessRow.style.display = sessions ? 'none' : 'block';
+    });
+    sel?.dispatchEvent(new Event('change'));
+  }
+
+  // Client autocomplete for credits modal
+  window.filterCreditsClients = function(q) {
+    const dd = document.getElementById('credits-client-dropdown');
+    const idInput = document.getElementById('credits-client-id');
+    if (!q) { dd.style.display = 'none'; return; }
+    const matches = clients.filter(c => c.name.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+    if (!matches.length) { dd.style.display = 'none'; return; }
+    dd.style.display = 'block';
+    dd.innerHTML = matches.map(c => `
+      <div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border)"
+           onmousedown="selectCreditsClient('${c.id}','${c.name.replace(/'/g,"\\'")}')">
+        <strong>${c.name}</strong> <span style="color:var(--text-muted);font-size:12px">${c.phone}</span>
+      </div>`).join('');
+  };
+  window.selectCreditsClient = function(id, name) {
+    document.getElementById('credits-client-input').value = name;
+    document.getElementById('credits-client-id').value = id;
+    document.getElementById('credits-client-dropdown').style.display = 'none';
+  };
+
+  // Save credits to Supabase
+  window.saveCredits = async function() {
+    const clientId = document.getElementById('credits-client-id').value;
+    const planSel  = document.getElementById('credits-plan-select');
+    const planId   = planSel?.value;
+    const startDate = document.getElementById('credits-start-date').value;
+    const endDate   = document.getElementById('credits-end-date').value;
+    const notes     = document.getElementById('credits-notes').value.trim();
+    if (!clientId) { showToast('⚠️ Please select a client'); return; }
+    if (!planId)   { showToast('⚠️ Please select a plan');   return; }
+    if (!startDate || !endDate) { showToast('⚠️ Please set dates'); return; }
+    const btn = document.getElementById('credits-save-btn');
+    btn.textContent = 'Saving...'; btn.disabled = true;
+    const { error } = await sb.from('client_memberships').insert({
+      client_id: clientId, plan_id: planId,
+      start_date: startDate, end_date: endDate,
+      status: 'active', sessions_used: 0
+    });
+    btn.textContent = 'Add Credits'; btn.disabled = false;
+    if (error) { showToast('❌ Error: ' + error.message); return; }
+    // Log a payment note if there are notes
+    if (notes) {
+      await sb.from('payments').insert({ client_id: clientId, description: notes, amount: 0, method: 'other', status: 'paid' }).catch(()=>{});
+    }
+    closeModal('modal-add-credits');
+    // Reset form
+    document.getElementById('credits-client-input').value = '';
+    document.getElementById('credits-client-id').value = '';
+    document.getElementById('credits-notes').value = '';
+    showToast('✅ Credits added successfully!');
+    await loadClientsDB();
+  };
+
+  // Hook modal open to init credits modal
+  const _origOpenModalCr = window.openModal;
+  window.openModal = function(id) {
+    _origOpenModalCr(id);
+    if (id === 'modal-add-credits') initCreditsModal();
   };
 
   // ── Init ─────────────────────────────────────
